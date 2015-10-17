@@ -22,40 +22,51 @@ import java.util.HashMap;
 public class CompressedSuffixTrie {
     //TODO: Define data structures for the compressed trie
     int ALPHABET_SIZE = 4;
+    SuffixTrieNode root;
 
     /** Constructor */
     public CompressedSuffixTrie (String f) {
         //TODO: create a compressed suffix trie from file f
-//        String analysisString = fileToString(f);
-//        System.out.println(analysisString);
-//
-//        SuffixTrieNode suffixTrieNode = new SuffixTrieNode(analysisString);
-//        System.out.println(suffixTrieNode);
 
+        root = new SuffixTrieNode(null,null);
+        String analysisString = fileToString(f);
 
-        String[] stringArray = new String[4];
-        stringArray[0] = "Happy";
-        stringArray[1] = "Birthday";
-        stringArray[2] = "to";
-        stringArray[3] = "me!";
+//        String[] myString = generateSuffixes(analysisString);
+        String[] suffixArray = generateSuffixes("ACCGTAC$");
 
-        SuffixTrieNode suffixTrieNodeRoot = new SuffixTrieNode(null, null);
-        SuffixTrieNode suffixTrieNode0 = new SuffixTrieNode(stringArray[0], suffixTrieNodeRoot);
-        SuffixTrieNode suffixTrieNode1 = new SuffixTrieNode(stringArray[1], suffixTrieNodeRoot);
-        SuffixTrieNode suffixTrieNode2 = new SuffixTrieNode(stringArray[2], suffixTrieNodeRoot);
-        SuffixTrieNode suffixTrieNode3 = new SuffixTrieNode(stringArray[3], suffixTrieNodeRoot);
-
-        suffixTrieNodeRoot.addChild(suffixTrieNode0);
-        suffixTrieNodeRoot.addChild(suffixTrieNode1);
-        suffixTrieNodeRoot.addChild(suffixTrieNode2);
-        suffixTrieNodeRoot.addChild(suffixTrieNode3);
-
-        System.out.println(suffixTrieNodeRoot.element());
-        System.out.println(suffixTrieNodeRoot.getChildren().size());
-
-        for (SuffixTrieNode child: (ArrayList<SuffixTrieNode>) suffixTrieNodeRoot.getChildren()) {
-            System.out.println(child);
+        for (int i = 0; i< suffixArray.length; i++) {
+//            System.out.println(myString[i]);
+            addSuffix(suffixArray[i]);
         }
+
+
+
+
+
+
+//        String[] stringArray = new String[4];
+//        stringArray[0] = "Happy";
+//        stringArray[1] = "Birthday";
+//        stringArray[2] = "to";
+//        stringArray[3] = "me!";
+//
+//        SuffixTrieNode suffixTrieNodeRoot = new SuffixTrieNode(null, null);
+//        SuffixTrieNode suffixTrieNode0 = new SuffixTrieNode(stringArray[0], suffixTrieNodeRoot);
+//        SuffixTrieNode suffixTrieNode1 = new SuffixTrieNode(stringArray[1], suffixTrieNodeRoot);
+//        SuffixTrieNode suffixTrieNode2 = new SuffixTrieNode(stringArray[2], suffixTrieNodeRoot);
+//        SuffixTrieNode suffixTrieNode3 = new SuffixTrieNode(stringArray[3], suffixTrieNodeRoot);
+//
+//        suffixTrieNodeRoot.addChild(suffixTrieNode0);
+//        suffixTrieNodeRoot.addChild(suffixTrieNode1);
+//        suffixTrieNodeRoot.addChild(suffixTrieNode2);
+//        suffixTrieNodeRoot.addChild(suffixTrieNode3);
+//
+//        System.out.println(suffixTrieNodeRoot.element());
+//        System.out.println(suffixTrieNodeRoot.getChildren().size());
+//
+//        for (SuffixTrieNode child: (ArrayList<SuffixTrieNode>) suffixTrieNodeRoot.getChildren()) {
+//            System.out.println(child);
+//        }
 
 
 
@@ -73,21 +84,25 @@ public class CompressedSuffixTrie {
     }
 
     /** Nested protected class SuffixTrieNode which adapts the Node class for our purposes */
-    public class SuffixTrieNode<String> {
+    public class SuffixTrieNode {
 
 
-        private String element;  // element stored at this node
-        private SuffixTrieNode<String> parent;  // adjacent node
-        private ArrayList<SuffixTrieNode> children = new ArrayList<SuffixTrieNode>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
+        protected String element;  // element stored at this node
+        protected SuffixTrieNode parent;  // adjacent node
+        protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
 
-        /** Default constructor */
-        public SuffixTrieNode() { }
+//        /** Default constructor */
+//        public SuffixTrieNode() {  }
 
         /** Main constructor */
-        public SuffixTrieNode(String element, SuffixTrieNode<String> parent) {
+        public SuffixTrieNode(String element, SuffixTrieNode parent) {
             setElement(element);
             setParent(parent);
 //            setChildren(children);
+
+            for (int i = 0; i < ALPHABET_SIZE + 1; i++) {
+                children.add(i,null);
+            }
         }
         /** Returns the element stored at this position */
         public String element() { return element; }
@@ -98,19 +113,17 @@ public class CompressedSuffixTrie {
         /** Sets the right child of this position */
         public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
         /** Returns the parent of this position */
-        public SuffixTrieNode<String> getParent() { return parent; }
+        public SuffixTrieNode getParent() { return parent; }
         /** Sets the parent of this position */
-        public void setParent(SuffixTrieNode<String> v) { parent=v; }
+        public void setParent(SuffixTrieNode v) { parent=v; }
 
         /** Add individual child node based on label **/
-        public void addChild(SuffixTrieNode child) {
-            this.children.add(child);
+        public void addChild(int index, SuffixTrieNode child) {
+            this.children.add(index, child);
+
         }
 
-
-        public java.lang.String toString() { return (java.lang.String) this.element;}
-
-
+        public String toString() { return this.element;}
     }
 
     /** Convert file into String */
@@ -138,6 +151,56 @@ public class CompressedSuffixTrie {
             return null;
         }
         return inputString;
+    }
+
+    /** Generate suffixes from inputString */
+    public String[] generateSuffixes(String inputString) {
+        inputString += "$";
+        int size = inputString.length();
+//        System.out.println(inputString);
+        String[] outputStingArray = new String[size];
+
+        for (int i = 0; i < size; i++) {
+            outputStingArray[i] = inputString.substring(i,size);
+        }
+        return outputStingArray;
+    }
+
+    /** Add a suffix to the CompressedSuffixTrie */
+    public void addSuffix(String suffix) { // O(n) - n is the number of characters
+        char[] suffixArray = suffix.toCharArray(); // O(n)
+        SuffixTrieNode node = this.root;
+        int childIndex = 0;
+        ArrayList<SuffixTrieNode> childrenArrayList;
+
+        for (char c: suffixArray) {
+
+            if (c == 'A') {
+                childIndex = 0;
+            }
+            else if (c == 'C') {
+                childIndex = 1;
+            }
+            else if (c == 'G') {
+                childIndex = 2;
+            }
+            else if (c == 'T') {
+                childIndex = 3;
+            }
+            else if (c == '$') {
+                childIndex = 4;
+            }
+
+            // check if there's not node at childIndex, then add a node there
+            if (node.getChildren().get(childIndex) == null) {
+                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(c), node);
+                node.addChild(childIndex, childNode);
+            }
+            System.out.println(node);
+            // now move to the next node
+            node = node.getChildren().get(childIndex);
+
+        }
     }
 
     public static void main(String args[]) throws Exception{
