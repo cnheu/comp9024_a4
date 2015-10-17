@@ -6,8 +6,15 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedWriter;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
+
+import net.datastructures.Position;
+import net.datastructures.PositionList;
 import net.datastructures.TreeNode;
+
+import java.util.HashMap;
 
 /**
  * Created by christophernheu on 17/10/2015.
@@ -19,11 +26,37 @@ public class CompressedSuffixTrie {
     /** Constructor */
     public CompressedSuffixTrie (String f) {
         //TODO: create a compressed suffix trie from file f
-        String analysisString = fileToString(f);
-        System.out.println(analysisString);
+//        String analysisString = fileToString(f);
+//        System.out.println(analysisString);
+//
+//        SuffixTrieNode suffixTrieNode = new SuffixTrieNode(analysisString);
+//        System.out.println(suffixTrieNode);
 
-        SuffixTrieNode suffixTrieNode = new SuffixTrieNode(analysisString);
-        System.out.println(suffixTrieNode);
+
+        String[] stringArray = new String[4];
+        stringArray[0] = "Happy";
+        stringArray[1] = "Birthday";
+        stringArray[2] = "to";
+        stringArray[3] = "me!";
+
+        SuffixTrieNode suffixTrieNodeRoot = new SuffixTrieNode(null, null);
+        SuffixTrieNode suffixTrieNode0 = new SuffixTrieNode(stringArray[0], suffixTrieNodeRoot);
+        SuffixTrieNode suffixTrieNode1 = new SuffixTrieNode(stringArray[1], suffixTrieNodeRoot);
+        SuffixTrieNode suffixTrieNode2 = new SuffixTrieNode(stringArray[2], suffixTrieNodeRoot);
+        SuffixTrieNode suffixTrieNode3 = new SuffixTrieNode(stringArray[3], suffixTrieNodeRoot);
+
+        suffixTrieNodeRoot.addChild(suffixTrieNode0);
+        suffixTrieNodeRoot.addChild(suffixTrieNode1);
+        suffixTrieNodeRoot.addChild(suffixTrieNode2);
+        suffixTrieNodeRoot.addChild(suffixTrieNode3);
+
+        System.out.println(suffixTrieNodeRoot.element());
+        System.out.println(suffixTrieNodeRoot.getChildren().size());
+
+        for (SuffixTrieNode child: (ArrayList<SuffixTrieNode>) suffixTrieNodeRoot.getChildren()) {
+            System.out.println(child);
+        }
+
 
 
     }
@@ -40,15 +73,44 @@ public class CompressedSuffixTrie {
     }
 
     /** Nested protected class SuffixTrieNode which adapts the Node class for our purposes */
-    public class SuffixTrieNode extends TreeNode<String> {
+    public class SuffixTrieNode<String> {
 
 
+        private String element;  // element stored at this node
+        private SuffixTrieNode<String> parent;  // adjacent node
+        private ArrayList<SuffixTrieNode> children = new ArrayList<SuffixTrieNode>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
 
-        public SuffixTrieNode(String s) {
-            super(s,null,null);
+        /** Default constructor */
+        public SuffixTrieNode() { }
+
+        /** Main constructor */
+        public SuffixTrieNode(String element, SuffixTrieNode<String> parent) {
+            setElement(element);
+            setParent(parent);
+//            setChildren(children);
+        }
+        /** Returns the element stored at this position */
+        public String element() { return element; }
+        /** Sets the element stored at this position */
+        public void setElement(String o) { element=o; }
+        /** Returns the children of this position */
+        public ArrayList<SuffixTrieNode> getChildren() { return children; }
+        /** Sets the right child of this position */
+        public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
+        /** Returns the parent of this position */
+        public SuffixTrieNode<String> getParent() { return parent; }
+        /** Sets the parent of this position */
+        public void setParent(SuffixTrieNode<String> v) { parent=v; }
+
+        /** Add individual child node based on label **/
+        public void addChild(SuffixTrieNode child) {
+            this.children.add(child);
         }
 
-        public String toString() { return this.element();}
+
+        public java.lang.String toString() { return (java.lang.String) this.element;}
+
+
     }
 
     /** Convert file into String */
