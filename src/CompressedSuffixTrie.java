@@ -42,6 +42,8 @@ public class CompressedSuffixTrie {
         }
 
         this.printLabels();
+
+
 //        findString("ACCGTAC");
 //        findString("B");
 //        findString("ACC");
@@ -140,8 +142,8 @@ public class CompressedSuffixTrie {
             return children.get(index);
         }
 
-//        /** Sets the right child of this position */
-//        public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
+        /** Sets the right child of this position */
+        public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
 
         /** Returns the parent of this position */
         public SuffixTrieNode getParent() { return parent; }
@@ -220,6 +222,7 @@ public class CompressedSuffixTrie {
                 SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(c), node);
                 node.setChild(childIndex, childNode);
 
+
             }
             // now move to the next node
             node = node.getChild(childIndex);
@@ -281,6 +284,47 @@ public class CompressedSuffixTrie {
         return;
     }
 
+    public void compressSuffixTrie() {
+        SuffixTrieNode node = this.root;
+
+    }
+
+    protected void compressSuffixTrieHelper(SuffixTrieNode node) {
+        if (node.label!= null) { // not at root
+            if (node.label().equals("$")) {
+                return;
+            }
+
+            if (node.numOfChildren == 1) { // to make sure we catch cases where only have one child
+                SuffixTrieNode childNode;
+                // find the child node
+                for (int childIndex = 0; childIndex < 5; childIndex++) { // O(s)
+                    if (node.getChild(childIndex) == null) {
+                        childNode = node.getChild(childIndex);
+
+                        // concatenate current node's label to include childNode's label
+                        node.setLabel(node.label() + childNode.label());
+
+                        // re-set numOfChildren for this node == childNode
+                        node.numOfChildren = childNode.numOfChildren;
+                        // delete currentNode.children, delete childNode
+
+                        // make currentNode children point childNode's children
+                        node.setChildren(childNode.getChildren());
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        for (int childIndex = 0; childIndex < 5; childIndex ++) {
+            if (node.getChild(childIndex) != null) {
+                compressSuffixTrieHelper(node.getChild(childIndex));
+            }
+        }
+        return;
+    }
     public static void main(String args[]) throws Exception{
 
     /** Construct a trie named trie1 */
