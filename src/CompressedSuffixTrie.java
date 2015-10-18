@@ -43,6 +43,8 @@ public class CompressedSuffixTrie {
 
         this.printLabels();
 
+        compressSuffixTrie();
+        this.printLabels();
 
 //        findString("ACCGTAC");
 //        findString("B");
@@ -286,6 +288,7 @@ public class CompressedSuffixTrie {
 
     public void compressSuffixTrie() {
         SuffixTrieNode node = this.root;
+        compressSuffixTrieHelper(node);
 
     }
 
@@ -299,7 +302,7 @@ public class CompressedSuffixTrie {
                 SuffixTrieNode childNode;
                 // find the child node
                 for (int childIndex = 0; childIndex < 5; childIndex++) { // O(s)
-                    if (node.getChild(childIndex) == null) {
+                    if (node.getChild(childIndex) != null) {
                         childNode = node.getChild(childIndex);
 
                         // concatenate current node's label to include childNode's label
@@ -312,7 +315,11 @@ public class CompressedSuffixTrie {
                         // make currentNode children point childNode's children
                         node.setChildren(childNode.getChildren());
 
-                        break;
+                        if (childNode.label().equals("$")) return;
+                        else {
+                            compressSuffixTrieHelper(node);
+                            break;
+                        }
                     }
                 }
             }
