@@ -61,7 +61,7 @@ public class CompressedSuffixTrie {
 //        suffixTrieNodeRoot.addChild(suffixTrieNode2);
 //        suffixTrieNodeRoot.addChild(suffixTrieNode3);
 //
-//        System.out.println(suffixTrieNodeRoot.element());
+//        System.out.println(suffixTrieNodeRoot.label());
 //        System.out.println(suffixTrieNodeRoot.getChildren().size());
 //
 //        for (SuffixTrieNode child: (ArrayList<SuffixTrieNode>) suffixTrieNodeRoot.getChildren()) {
@@ -73,8 +73,14 @@ public class CompressedSuffixTrie {
     }
 
     /** Method for finding the first occurrence of a pattern s in the DNA sequence */
-    public int findString (String s) {
+    public int findString (String suffix) {
         //TODO: define method
+        SuffixTrieNode node = this.root;
+        char[] suffixArray = suffix.toCharArray();
+
+        for (char c: suffixArray) {
+
+        }
         return 0;
     }
 
@@ -87,7 +93,7 @@ public class CompressedSuffixTrie {
     public class SuffixTrieNode {
 
 
-        protected String element;  // element stored at this node
+        protected String label;  // label stored at this node
         protected SuffixTrieNode parent;  // adjacent node
         protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
 
@@ -95,8 +101,8 @@ public class CompressedSuffixTrie {
 //        public SuffixTrieNode() {  }
 
         /** Main constructor */
-        public SuffixTrieNode(String element, SuffixTrieNode parent) {
-            setElement(element);
+        public SuffixTrieNode(String label, SuffixTrieNode parent) {
+            setLabel(label);
             setParent(parent);
 //            setChildren(children);
 
@@ -104,12 +110,18 @@ public class CompressedSuffixTrie {
                 children.add(i,null);
             }
         }
-        /** Returns the element stored at this position */
-        public String element() { return element; }
-        /** Sets the element stored at this position */
-        public void setElement(String o) { element=o; }
+        /** Returns the label stored at this position */
+        public String label() { return label; }
+        /** Sets the label stored at this position */
+        public void setLabel(String o) { label=o; }
         /** Returns the children of this position */
         public ArrayList<SuffixTrieNode> getChildren() { return children; }
+
+        /** Returns the child at a given index */
+        public SuffixTrieNode getChild(int index) {
+            return children.get(index);
+        }
+
         /** Sets the right child of this position */
         public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
         /** Returns the parent of this position */
@@ -119,11 +131,10 @@ public class CompressedSuffixTrie {
 
         /** Add individual child node based on label **/
         public void addChild(int index, SuffixTrieNode child) {
-            this.children.add(index, child);
-
+            this.children.set(index, child);
         }
 
-        public String toString() { return this.element;}
+        public String toString() { return this.label;}
     }
 
     /** Convert file into String */
@@ -175,31 +186,54 @@ public class CompressedSuffixTrie {
 
         for (char c: suffixArray) {
 
-            if (c == 'A') {
-                childIndex = 0;
-            }
-            else if (c == 'C') {
-                childIndex = 1;
-            }
-            else if (c == 'G') {
-                childIndex = 2;
-            }
-            else if (c == 'T') {
-                childIndex = 3;
-            }
-            else if (c == '$') {
-                childIndex = 4;
-            }
-
-            // check if there's not node at childIndex, then add a node there
-            if (node.getChildren().get(childIndex) == null) {
+//            if (c == 'A') {
+//                childIndex = 0;
+//            }
+//            else if (c == 'C') {
+//                childIndex = 1;
+//            }
+//            else if (c == 'G') {
+//                childIndex = 2;
+//            }
+//            else if (c == 'T') {
+//                childIndex = 3;
+//            }
+//            else if (c == '$') {
+//                childIndex = 4;
+//            }
+//
+//            // check if there's not node at childIndex, then add a node there
+//            if (node.getChildren().get(childIndex) == null) {
+//                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(c), node);
+//                node.addChild(childIndex, childNode);
+//            }
+            childIndex = getIndex(c);
+            if (node.getChild(childIndex) == null) {
                 SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(c), node);
                 node.addChild(childIndex, childNode);
             }
             System.out.println(node);
             // now move to the next node
-            node = node.getChildren().get(childIndex);
+            node = node.getChild(childIndex);
 
+        }
+    }
+
+    public static int getIndex(char c) {
+        if (c == 'A') {
+            return 0;
+        }
+        else if (c == 'C') {
+            return 1;
+        }
+        else if (c == 'G') {
+            return 2;
+        }
+        else if (c == 'T') {
+            return 3;
+        }
+        else {
+            return 4;
         }
     }
 
