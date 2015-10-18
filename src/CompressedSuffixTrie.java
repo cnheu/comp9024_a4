@@ -13,6 +13,7 @@ import java.util.Scanner;
 import net.datastructures.Position;
 import net.datastructures.PositionList;
 import net.datastructures.TreeNode;
+import sun.awt.image.ImageWatched;
 
 import javax.naming.directory.InvalidAttributeValueException;
 import java.util.HashMap;
@@ -40,11 +41,12 @@ public class CompressedSuffixTrie {
             addSuffix(suffixArray[i]);
         }
 
-        findString("ACCGTAC");
-        findString("B");
-        findString("ACC");
-        findString("TAC");
-        findString("TA");
+        this.printLabels();
+//        findString("ACCGTAC");
+//        findString("B");
+//        findString("ACC");
+//        findString("TAC");
+//        findString("TA");
 
 
 
@@ -105,6 +107,7 @@ public class CompressedSuffixTrie {
 
 
         protected String label;  // label stored at this node
+        protected int[] compactLabel;
         protected SuffixTrieNode parent;  // adjacent node
         protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
         protected int numOfChildren;
@@ -115,12 +118,13 @@ public class CompressedSuffixTrie {
         public SuffixTrieNode(String label, SuffixTrieNode parent) {
             setLabel(label);
             setParent(parent);
-//            setChildren(children);
-
+            numOfChildren = 0;
+            compactLabel = new int[3];
+            
             for (int i = 0; i < ALPHABET_SIZE + 1; i++) {
                 children.add(i,null);
             }
-            numOfChildren = 0;
+
         }
         /** Returns the label stored at this position */
         public String label() { return label; }
@@ -146,7 +150,7 @@ public class CompressedSuffixTrie {
         public void setParent(SuffixTrieNode v) { parent=v; }
 
         /** Add individual child node based on index **/
-        public void addChild(int index, SuffixTrieNode child) {
+        public void setChild(int index, SuffixTrieNode child) {
             this.children.set(index, child);
             numOfChildren ++;
         }
@@ -192,7 +196,6 @@ public class CompressedSuffixTrie {
     public String[] generateSuffixes(String inputString) {
         inputString += "$";
         int size = inputString.length();
-//        System.out.println(inputString);
         String[] outputStingArray = new String[size];
 
         for (int i = 0; i < size; i++) {
@@ -215,7 +218,7 @@ public class CompressedSuffixTrie {
             // check to see that the child exists
             if (node.getChild(childIndex) == null) {
                 SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(c), node);
-                node.addChild(childIndex, childNode);
+                node.setChild(childIndex, childNode);
 
             }
             // now move to the next node
@@ -242,6 +245,40 @@ public class CompressedSuffixTrie {
             return 4;
         }
         else return -1;
+    }
+
+    public void printLabels() {
+        SuffixTrieNode node = this.root;
+        LinkedList<String> store = new LinkedList<String>();
+        printLabelsHelper(node, store);
+    }
+
+    public void printLabelsHelper(SuffixTrieNode node, LinkedList<String> store) {
+
+        if (node.label!= null) {
+            store.add(node.label());
+
+            if (node.label().equals("$")) {
+                String suffix = "";
+                for (String label : store) {
+                    suffix += label;
+                }
+                System.out.println(suffix);
+                store.removeLast();
+                return;
+            }
+        }
+
+        for (int childIndex = 0; childIndex < 5; childIndex ++) {
+            if (node.getChild(childIndex) != null) {
+                printLabelsHelper(node.getChild(childIndex), store);
+            }
+        }
+
+        if (node.label!=null) {
+            store.removeLast(); // remove this node's label from store once it's children have all been examined
+        }
+        return;
     }
 
     public static void main(String args[]) throws Exception{
