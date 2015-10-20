@@ -1,3 +1,4 @@
+import com.sun.jmx.remote.internal.ArrayQueue;
 import net.datastructures.Node;
 
 import java.io.FileNotFoundException;
@@ -45,7 +46,7 @@ public class CompressedSuffixTrie {
             addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
         }
 
-        this.printLabels();
+//        this.printLabels();
 
         compressSuffixTrie();
         this.printLabels();
@@ -278,38 +279,63 @@ public class CompressedSuffixTrie {
 
     public void printLabels() {
         SuffixTrieNode node = this.root;
-        LinkedList<String> store = new LinkedList<String>();
+//        LinkedList<String> store = new LinkedList<String>();
+        int queueSize = (8 * 9) / 2;
+        ArrayQueue<SuffixTrieNode> store = new ArrayQueue<>(queueSize);
         printLabelsHelper(node, store);
     }
 
-    public void printLabelsHelper(SuffixTrieNode node, LinkedList<String> store) {
+    /** DFS based print */
+//    public void printLabelsHelper(SuffixTrieNode node, LinkedList<String> store) {
+//
+//        if (node.label!= null) {
+//            store.add(node.label());
+//            char[] labelArray = node.label().toCharArray();
+//
+//            if (labelArray[labelArray.length-1] == '$') {
+////            if (node.label().equals("$")) {
+//                String suffix = "";
+//                for (String label : store) {
+//                    suffix += label;
+//                }
+//                System.out.println(suffix);
+//                store.removeLast();
+//                return;
+//            }
+//        }
+//
+//        for (int childIndex = 0; childIndex < 5; childIndex ++) {
+//            if (node.getChild(childIndex) != null) {
+//                printLabelsHelper(node.getChild(childIndex), store);
+//            }
+//        }
+//
+//        if (node.label!=null) {
+//            store.removeLast(); // remove this node's label from store once it's children have all been examined
+//        }
+//        return;
+//    }
+//
+    /** Level Order Print */
+    public void printLabelsHelper(SuffixTrieNode root, ArrayQueue<SuffixTrieNode> store) {
+        store.add(root);
 
-        if (node.label!= null) {
-            store.add(node.label());
-            char[] labelArray = node.label().toCharArray();
+        while (!store.isEmpty()) {
+            SuffixTrieNode node = store.remove(0);
 
-            if (labelArray[labelArray.length-1] == '$') {
-//            if (node.label().equals("$")) {
-                String suffix = "";
-                for (String label : store) {
-                    suffix += label;
+            // perform visit
+            if (node.label!=null) {
+                String output = node.label() + " - (" + node.compactLabel()[0] + ", " + node.compactLabel()[1] + ")";
+                System.out.println(output);
+            }
+
+            // loop through children and append them as required
+            for (int childIndex = 0; childIndex < 5; childIndex++) {
+                if (node.getChild(childIndex) != null) {
+                    store.add(node.getChild(childIndex));
                 }
-                System.out.println(suffix);
-                store.removeLast();
-                return;
             }
         }
-
-        for (int childIndex = 0; childIndex < 5; childIndex ++) {
-            if (node.getChild(childIndex) != null) {
-                printLabelsHelper(node.getChild(childIndex), store);
-            }
-        }
-
-        if (node.label!=null) {
-            store.removeLast(); // remove this node's label from store once it's children have all been examined
-        }
-        return;
     }
 
     public void compressSuffixTrie() {
