@@ -34,11 +34,15 @@ public class CompressedSuffixTrie {
         String analysisString = fileToString(f);
 
 //        String[] myString = generateSuffixes(analysisString);
-        String[] suffixArray = generateSuffixes("ACCGTAC");
+        int[] suffixStartIndexArray = new int[8];
+        String[] suffixStringArray = new String[8];
+        generateSuffixes("ACCGTAC", suffixStringArray, suffixStartIndexArray);
 
-        for (int i = 0; i< suffixArray.length; i++) {
-//            System.out.println(suffixArray[i]);
-            addSuffix(suffixArray[i]);
+
+        for (int i = 0; i< suffixStringArray.length; i++) {
+//            System.out.println(suffixStringArray[i]);
+//            System.out.println(suffixStartIndexArray[i]);
+            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
         }
 
         this.printLabels();
@@ -67,7 +71,7 @@ public class CompressedSuffixTrie {
             int childIndex;
 
             for (int suffixIndex = 0; suffixIndex < suffixArray.length; suffixIndex++) {
-                childIndex = getIndex(suffixArray[suffixIndex]);
+                childIndex = mapCharToIndex(suffixArray[suffixIndex]);
                 if (childIndex == -1) {
                     throw new InvalidAttributeValueException("Invalid character not part of alphabet ACGT");
                 }
@@ -119,13 +123,17 @@ public class CompressedSuffixTrie {
 //        /** Default constructor */
 //        public SuffixTrieNode() {  }
 
+        //TODO: consider adding sentinel node
+        
         /** Main constructor */
         public SuffixTrieNode(String label, SuffixTrieNode parent, int index) {
             setLabel(label);
-            setParent(parent);
+            setParent(parent); // TODO: may not need parent
             numOfChildren = 0;
-            compactLabel = new int[3];
+            compactLabel = new int[2];
             stringIndex = index;
+            compactLabel[0] = index;
+            compactLabel[1] = index;
             
             for (int i = 0; i < ALPHABET_SIZE + 1; i++) {
                 children.add(i,null);
@@ -137,6 +145,12 @@ public class CompressedSuffixTrie {
 
         /** Sets the label stored at this position */
         public void setLabel(String o) { label=o; }
+
+        /** Returns the compactLabel stored at this position */
+        public int[] compactLabel() { return compactLabel; }
+
+        /** Sets the second integer of compactLabel stored at this position, used for updating during construction */
+        public void setCompactLabel(int newIndex) { compactLabel[1] = newIndex; }
 
         /** Returns the children of this position */
         public ArrayList<SuffixTrieNode> getChildren() { return children; }
@@ -153,7 +167,7 @@ public class CompressedSuffixTrie {
         public SuffixTrieNode getParent() { return parent; }
 
         /** Sets the parent of this position */
-        public void setParent(SuffixTrieNode v) { parent=v; }
+        public void setParent(SuffixTrieNode v) { parent=v; } // TODO: may not need parent
 
         /** Add individual child node based on index **/
         public void setChild(int index, SuffixTrieNode child) {
@@ -207,19 +221,20 @@ public class CompressedSuffixTrie {
     }
 
     /** Generate suffixes from inputString */
-    public String[] generateSuffixes(String inputString) {
+    public void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
         inputString += "$";
         int size = inputString.length();
-        String[] outputStingArray = new String[size];
+//        String[] outputStingArray = new String[size];
 
         for (int i = 0; i < size; i++) {
-            outputStingArray[i] = inputString.substring(i,size);
+            suffixStringArray[i] = inputString.substring(i,size);
+            suffixStartIndexArray[i] = i;
         }
-        return outputStingArray;
+//        return outputStingArray;
     }
 
     /** Add a suffix to the CompressedSuffixTrie */
-    public void addSuffix(String suffix) { // O(n) - n is the number of characters
+    public void addSuffix(String suffix, int suffixStartIndex) { // O(n) - n is the number of characters
         char[] suffixArray = suffix.toCharArray(); // O(n)
         SuffixTrieNode node = this.root;
         int childIndex = 0;
@@ -227,14 +242,13 @@ public class CompressedSuffixTrie {
 
         for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) {
             // get the index
-            childIndex = getIndex(suffixArray[stringIndex]);
+            childIndex = mapCharToIndex(suffixArray[stringIndex]);
 
             // check to see that the child exists
             if (node.getChild(childIndex) == null) {
-                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), node, stringIndex);
+
+                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), node, suffixStartIndex+stringIndex);
                 node.setChild(childIndex, childNode);
-
-
             }
             // now move to the next node
             node = node.getChild(childIndex);
@@ -243,7 +257,7 @@ public class CompressedSuffixTrie {
     }
 
     /** Simple map from char to index in the children ArrayList */
-    public static int getIndex(char c) { // O(1)
+    public static int mapCharToIndex(char c) { // O(1)
         if (c == 'A') {
             return 0;
         }
@@ -314,6 +328,9 @@ public class CompressedSuffixTrie {
 
             // concatenate current node's label to include childNode's label
             node.setLabel(node.label() + childNode.label());
+
+            // update current node's compactLabel, second index to the childNode's index
+            node.setCompactLabel(childNode.compactLabel()[0]);
 
             // re-set numOfChildren for this node == childNode
             node.numOfChildren = childNode.numOfChildren;
