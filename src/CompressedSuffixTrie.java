@@ -26,18 +26,23 @@ public class CompressedSuffixTrie {
     //TODO: Define data structures for the compressed trie
     int ALPHABET_SIZE = 4;
     SuffixTrieNode root;
+    char[] sourceArray;
+    String sourceString;
 
     /** Constructor */
     public CompressedSuffixTrie (String f) {
         //TODO: create a compressed suffix trie from file f
 
         root = new SuffixTrieNode(null,null,-1);
-        String analysisString = fileToString(f);
+//        String sourceString = fileToString(f);
+        sourceString = "ACCGTAC";
+        sourceString += "$";
+        sourceArray = sourceString.toCharArray();
 
 //        String[] myString = generateSuffixes(analysisString);
         int[] suffixStartIndexArray = new int[8];
         String[] suffixStringArray = new String[8];
-        generateSuffixes("ACCGTAC", suffixStringArray, suffixStartIndexArray);
+        generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
 
 
         for (int i = 0; i< suffixStringArray.length; i++) {
@@ -50,55 +55,109 @@ public class CompressedSuffixTrie {
 
         compressSuffixTrie();
         this.printLabels();
+        findString("AC");
 
-//        findString("ACCGTAC");
-//        findString("B");
-//        findString("ACC");
-//        findString("TAC");
-//        findString("TA");
-
-
-
-
+        findString("ACCGTAC");
+        findString("B");
+        findString("ACC");
+        findString("TAC");
+        findString("TA");
+        findString("CAT");
     }
 
-    /** Method for finding the first occurrence of a pattern s in the DNA sequence */
-    public int findString (String suffix) {
+//    /** Method for finding the first occurrence of a pattern s in the DNA sequence.
+//     * This works with non-compressed suffixTrie */
+//    public int findString (String query) {
+//        try {
+//            //TODO: define method
+//            query += "$";
+//            SuffixTrieNode node = this.root;
+//            char[] suffixArray = query.toCharArray();
+//            int childIndex;
+//
+//            for (int suffixIndex = 0; suffixIndex < suffixArray.length; suffixIndex++) {
+//                childIndex = mapCharToIndex(suffixArray[suffixIndex]);
+//                if (childIndex == -1) {
+//                    throw new InvalidAttributeValueException("Invalid character not part of alphabet ACGT");
+//                }
+//
+//                // Check this child exists
+//                if (node.getChild(childIndex) == null) {
+//                    System.out.println("Suffix: " + query + " was not found at charIndex: " + suffixIndex);
+//                    return 0;
+//                } else {
+//                    // check for end state
+//                    if (suffixIndex == suffixArray.length - 1) {
+//                        if (!node.getChild(childIndex).label().equals("$")) {
+//                            System.out.println("My dollar sign at final node: " + node.getChild(childIndex).label());
+//                            System.out.println("My dollar sign at final node class is: " + node.getChild(childIndex).label().getClass());
+//                            System.out.println("Suffix: " + query + " was not found with marker $");
+//                            return 0;
+//                        }
+//                        break;
+//                    }
+//                    //                else if (node.getChild(childIndex).label() != Character.toString(suffixArray[suffixIndex])) {
+//                    //                    System.out.println("Label not matching char at index: " + suffixIndex);
+//                    //                }
+//                    node = node.getChild(childIndex);
+//                }
+//            }
+//            System.out.println(query);
+//        }
+//        catch (InvalidAttributeValueException e) {
+//            System.out.println("Invalid character in string to be found that is not in the alphabet ACGT");
+//        }
+//        return 1;
+//    }
+
+    /** Method for finding the first occurrence of a pattern s in the DNA sequence.
+     * Designed for non-compressed suffixTrie */
+    public int findString (String query) {
         try {
             //TODO: define method
-            suffix += "$";
+//            query += "$";
             SuffixTrieNode node = this.root;
-            char[] suffixArray = suffix.toCharArray();
+            char[] queryArray = query.toCharArray();
+            LinkedList queryList = new LinkedList<>(); //TODO: fix this
+
+            for (char c : queryArray) {
+                queryList.add(c);
+            }
+
             int childIndex;
 
-            for (int suffixIndex = 0; suffixIndex < suffixArray.length; suffixIndex++) {
-                childIndex = mapCharToIndex(suffixArray[suffixIndex]);
+            /**
+             1. Visit the childNode with compact label starting at current queryIndex
+             2. Check compactLabel endIndex
+             3. for that node, from start to end of compact label, cross-reference each char in queryArray, If it fails
+             4. doesn't end the same we kow we failed.
+             */
+
+            while (!queryList.isEmpty()) {
+                childIndex = mapCharToIndex((char) queryList.peekFirst());
                 if (childIndex == -1) {
                     throw new InvalidAttributeValueException("Invalid character not part of alphabet ACGT");
                 }
 
-                // Check this child exists
                 if (node.getChild(childIndex) == null) {
-                    System.out.println("Suffix: " + suffix + " was not found at charIndex: " + suffixIndex);
+                    System.out.println("Suffix: " + query + " was not found");
                     return 0;
                 } else {
-                    // check for end state
-                    if (suffixIndex == suffixArray.length - 1) {
-                        if (!node.getChild(childIndex).label().equals("$")) {
-                            System.out.println("My dollar sign at final node: " + node.getChild(childIndex).label());
-                            System.out.println("My dollar sign at final node class is: " + node.getChild(childIndex).label().getClass());
-                            System.out.println("Suffix: " + suffix + " was not found with marker $");
+                    int startIndex = node.getChild(childIndex).compactLabel()[0];
+                    int endIndex = node.getChild(childIndex).compactLabel()[1];
+                    for (int i = startIndex; i <= endIndex; i++) { // cross reference each char in the queryList with the char at index in the original sourceArray
+                        char charInQuery = (char) queryList.pop();
+                        if (sourceArray[i] != charInQuery) {
+                            System.out.println("Suffix: " + query + " was not found at char: " + charInQuery);
                             return 0;
                         }
-                        break;
+                        if (queryList.isEmpty()) break;
                     }
-                    //                else if (node.getChild(childIndex).label() != Character.toString(suffixArray[suffixIndex])) {
-                    //                    System.out.println("Label not matching char at index: " + suffixIndex);
-                    //                }
-                    node = node.getChild(childIndex);
+                    node = node.getChild(childIndex); // advance the node
                 }
             }
-            System.out.println(suffix);
+            System.out.println(query);
+
         }
         catch (InvalidAttributeValueException e) {
             System.out.println("Invalid character in string to be found that is not in the alphabet ACGT");
@@ -223,7 +282,7 @@ public class CompressedSuffixTrie {
 
     /** Generate suffixes from inputString */
     public void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
-        inputString += "$";
+//        inputString += "$";
         int size = inputString.length();
 //        String[] outputStingArray = new String[size];
 
