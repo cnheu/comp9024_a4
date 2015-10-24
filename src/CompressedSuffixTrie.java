@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.BufferedWriter;
 import java.util.*;
+import java.lang.Math;
 
 import net.datastructures.Position;
 import net.datastructures.PositionList;
@@ -31,7 +32,8 @@ public class CompressedSuffixTrie {
 
         // Initialise class attributes
         root = new SuffixTrieNode(null,null,-1);
-        String sourceString = fileToString(f);
+        String sourceString = fileToString(f) + "$";
+
         sourceArray = sourceString.toCharArray();
         sourceSize = sourceArray.length;
 
@@ -115,7 +117,37 @@ public class CompressedSuffixTrie {
 
     /** Method for computing the degree of similarity of two DNA sequences stored in the text files f1 and f2 */
     public static float similarityAnalyser(String f1, String f2, String f3) {
-        return 0;
+        char[] f1Array = fileToString(f1).toCharArray();
+        char[] f2Array = fileToString(f2).toCharArray();
+
+        String lcs = longestCommonSubsequence(f1Array, f2Array, f3);
+
+        float num = (float) lcs.length();
+        float den = (float) Math.max(f1Array.length, f2Array.length);
+        return num/den;
+    }
+
+    public static String longestCommonSubsequence(char[] f1, char[] f2, String f3) {
+
+        String[][] store = new String[f1.length][f2.length];
+        String lcs = "";
+
+        for (int i = 0; i < f1.length; i++) {
+            for (int j = 0; j < f2.length; j++) {
+
+                if (f1[i] != f2[j]) store[i][j] = "";
+                else { // matched at this i,j
+                    if (i == 0 || j == 0) {
+                        store[i][j] = Character.toString(f1[i]);
+                    } else {
+                        store[i][j] = store[i - 1][j - 1] + Character.toString(f1[i]);
+                    }
+                    if (store[i][j].length() >= lcs.length()) lcs = store[i][j];
+                }
+            }
+        }
+        System.out.println(lcs);
+        return lcs;
     }
 
     /** Nested protected class SuffixTrieNode which adapts the Node class for our purposes */
@@ -203,7 +235,7 @@ public class CompressedSuffixTrie {
     }
 
     /** Convert file into String */
-    public String fileToString(String fileName) {
+    public static String fileToString(String fileName) {
         Path path = Paths.get("");
         fileName = path.toAbsolutePath().toString() + "/" + fileName + ".txt";
         System.out.println(fileName);
@@ -217,7 +249,7 @@ public class CompressedSuffixTrie {
                 next = input.next().toCharArray();
                 // filter each char to make sure they are inside the alphabet
                 for (char c: next) {
-                    if (c == 'A' || c == 'C' || c == 'G' || c == 'T') inputString += Character.toString(c);
+                    if (mapCharToIndex(c) >= 0 || mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // mapCharToIndex verifies that the char is part of the alphabet
                 }
                 // Check each iteration of inputString for diagnostics
 //                System.out.println(inputString);
@@ -232,7 +264,7 @@ public class CompressedSuffixTrie {
             System.out.println("[ERROR] " + e.getMessage());
             return null;
         }
-        return inputString+"$";
+        return inputString;
     }
 
 
@@ -293,15 +325,9 @@ public class CompressedSuffixTrie {
     }
 
     public void printLabels() {
-        SuffixTrieNode node = this.root;
-//        LinkedList<String> store = new LinkedList<String>();
+        SuffixTrieNode root = this.root;
         int queueSize = (sourceSize * (sourceSize+1)) / 2;
         ArrayQueue<SuffixTrieNode> store = new ArrayQueue<>(queueSize);
-        printLabelsHelper(node, store);
-    }
-
-    /** Level Order Print */
-    public void printLabelsHelper(SuffixTrieNode root, ArrayQueue<SuffixTrieNode> store) {
         store.add(root);
 
         while (!store.isEmpty()) {
@@ -321,6 +347,28 @@ public class CompressedSuffixTrie {
             }
         }
     }
+
+//    /** Level Order Print */
+//    public void printLabelsHelper(SuffixTrieNode root, ArrayQueue<SuffixTrieNode> store) {
+//        store.add(root);
+//
+//        while (!store.isEmpty()) {
+//            SuffixTrieNode node = store.remove(0);
+//
+//            // perform visit
+//            if (node.label!=null) {
+//                String output = node.label() + " - (" + node.compactLabel()[0] + ", " + node.compactLabel()[1] + ")";
+//                System.out.println(output);
+//            }
+//
+//            // loop through children and append them as required
+//            for (int childIndex = 0; childIndex < 5; childIndex++) {
+//                if (node.getChild(childIndex) != null) {
+//                    store.add(node.getChild(childIndex));
+//                }
+//            }
+//        }
+//    }
 
     public void compressSuffixTrie() {
         SuffixTrieNode node = this.root;
@@ -389,6 +437,8 @@ public class CompressedSuffixTrie {
 //        System.out.println(trie2.findString("CAT"));
 
 //        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4"));
+
 
     }
 
