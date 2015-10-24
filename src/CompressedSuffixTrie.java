@@ -31,7 +31,7 @@ public class CompressedSuffixTrie {
     public CompressedSuffixTrie (String f) {
 
         // Initialise class attributes
-        root = new SuffixTrieNode(null,null,-1);
+        root = new SuffixTrieNode(null,-1);
         String sourceString = fileToString(f) + "$";
 
         sourceArray = sourceString.toCharArray();
@@ -39,13 +39,7 @@ public class CompressedSuffixTrie {
 
         System.out.println(sourceString);
 
-        int[] suffixStartIndexArray = new int[sourceArray.length];
-        String[] suffixStringArray = new String[sourceArray.length];
-        generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
-
-        for (int i = 0; i< suffixStringArray.length; i++) {
-            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
-        }
+        constructSuffixTrie(sourceString);
 //
         compressSuffixTrie();
 //        this.printLabels();
@@ -127,6 +121,17 @@ public class CompressedSuffixTrie {
         return num/den;
     }
 
+    /**
+     * longestCommonSubsequence
+     *
+     * Time Complexity: O(n)
+     *
+     * Helper function for similarityAnalyser.
+     * @param f1
+     * @param f2
+     * @param f3
+     * @return
+     */
     public static String longestCommonSubsequence(char[] f1, char[] f2, String f3) {
 
         String[][] store = new String[f1.length][f2.length];
@@ -160,15 +165,11 @@ public class CompressedSuffixTrie {
         protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
         protected int stringIndex;
         protected int numOfChildren;
-//        /** Default constructor */
-//        public SuffixTrieNode() {  }
 
-        //TODO: consider adding sentinel node
-        
         /** Main constructor */
-        public SuffixTrieNode(String label, SuffixTrieNode parent, int index) {
+        public SuffixTrieNode(String label, int index) {
             setLabel(label);
-            setParent(parent); // TODO: may not need parent
+//            setParent(parent); // TODO: may not need parent
             numOfChildren = 0;
             compactLabel = new int[2];
             stringIndex = index;
@@ -203,25 +204,12 @@ public class CompressedSuffixTrie {
         /** Sets the right child of this position */
         public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
 
-        /** Returns the parent of this position */
-        public SuffixTrieNode getParent() { return parent; }
-
-        /** Sets the parent of this position */
-        public void setParent(SuffixTrieNode v) { parent=v; } // TODO: may not need parent
-
         /** Add individual child node based on index **/
         public void setChild(int index, SuffixTrieNode child) {
             this.children.set(index, child);
             numOfChildren ++;
         }
-
-//        /** Remove individual child node based on index */
-//        public SuffixTrieNode removeChild(int index) {
-//            SuffixTrieNode removedChild = this.children.get(index);
-//            this.children.set(index, null);
-//            numOfChildren --;
-//            return removedChild;
-//        }
+        
         protected int locateSingleChildIndex() {
             for (int childIndex = 0; childIndex < 5; childIndex ++) {
                 if (this.getChild(childIndex) != null) {
@@ -269,16 +257,30 @@ public class CompressedSuffixTrie {
 
 
     /** Generate suffixes from inputString */
-    public void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
-//        inputString += "$";
+    protected void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
         int size = inputString.length();
-//        String[] outputStingArray = new String[size];
 
         for (int i = 0; i < size; i++) {
             suffixStringArray[i] = inputString.substring(i,size);
             suffixStartIndexArray[i] = i;
         }
-//        return outputStingArray;
+    }
+
+    /** Construct non-compressed, non-compact suffix trie
+     *
+     *
+     */
+
+    public void constructSuffixTrie(String sourceString) {
+
+        int[] suffixStartIndexArray = new int[sourceArray.length];
+        String[] suffixStringArray = new String[sourceArray.length];
+
+        generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
+
+        for (int i = 0; i< suffixStringArray.length; i++) {
+            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
+        }
     }
 
     /** Add a suffix to the CompressedSuffixTrie */
@@ -295,12 +297,11 @@ public class CompressedSuffixTrie {
             // check to see that the child exists
             if (node.getChild(childIndex) == null) {
 
-                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), node, suffixStartIndex+stringIndex);
+                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), suffixStartIndex+stringIndex);
                 node.setChild(childIndex, childNode);
             }
             // now move to the next node
             node = node.getChild(childIndex);
-//            System.out.println(node); // print out newly added childNode
         }
     }
 
@@ -425,7 +426,7 @@ public class CompressedSuffixTrie {
 
         System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
 
-        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4"));
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
 
 //        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
 //        System.out.println(trie2.findString("AC"));
@@ -437,7 +438,7 @@ public class CompressedSuffixTrie {
 //        System.out.println(trie2.findString("CAT"));
 
 //        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
-        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4"));
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4")); // Solution: 0.23809524
 
 
     }
