@@ -7,9 +7,7 @@ import java.nio.file.Paths;
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedWriter;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 import net.datastructures.Position;
 import net.datastructures.PositionList;
@@ -17,7 +15,6 @@ import net.datastructures.TreeNode;
 import sun.awt.image.ImageWatched;
 
 import javax.naming.directory.InvalidAttributeValueException;
-import java.util.HashMap;
 
 /**
  * Created by christophernheu on 17/10/2015.
@@ -31,26 +28,22 @@ public class CompressedSuffixTrie {
 
     /** Constructor */
     public CompressedSuffixTrie (String f) {
-        //TODO: create a compressed suffix trie from file f
 
+        // Initialise class attributes
         root = new SuffixTrieNode(null,null,-1);
-        String sourceString = fileToString(f) + "$";
+        String sourceString = fileToString(f);
         sourceArray = sourceString.toCharArray();
         sourceSize = sourceArray.length;
 
-//        String[] myString = generateSuffixes(analysisString);
+        System.out.println(sourceString);
+
         int[] suffixStartIndexArray = new int[sourceArray.length];
         String[] suffixStringArray = new String[sourceArray.length];
         generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
 
-
         for (int i = 0; i< suffixStringArray.length; i++) {
-//            System.out.println(suffixStringArray[i]);
-//            System.out.println(suffixStartIndexArray[i]);
             addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
         }
-
-//        this.printLabels();
 //
         compressSuffixTrie();
 //        this.printLabels();
@@ -216,11 +209,18 @@ public class CompressedSuffixTrie {
         System.out.println(fileName);
         File file = new File(fileName);
         String inputString = ""; // O(1)
+        char[] next;
 
         try {
             Scanner input = new Scanner(file);
-            while (input.hasNextLine()) { // O(n) - at worst, if each task attribute is on a separate line
-                inputString += input.nextLine(); // O(1)
+            while (input.hasNext()) { // O(n) - at worst, if each task attribute is on a separate line
+                next = input.next().toCharArray();
+                // filter each char to make sure they are inside the alphabet
+                for (char c: next) {
+                    if (c == 'A' || c == 'C' || c == 'G' || c == 'T') inputString += Character.toString(c);
+                }
+                // Check each iteration of inputString for diagnostics
+//                System.out.println(inputString);
             }
             if (inputString == "") throw new Exception("(Input task file empty)");
         }
@@ -232,8 +232,9 @@ public class CompressedSuffixTrie {
             System.out.println("[ERROR] " + e.getMessage());
             return null;
         }
-        return inputString;
+        return inputString+"$";
     }
+
 
     /** Generate suffixes from inputString */
     public void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
@@ -370,23 +371,24 @@ public class CompressedSuffixTrie {
     /** Construct a trie named trie1 */
         CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
 
-//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
-//
-//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
-//
-//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
-//
-//        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4"));
+        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
 
-        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
-        System.out.println(trie2.findString("AC"));
-        System.out.println(trie2.findString("ACCGTAC"));
-        System.out.println(trie2.findString("B"));
-        System.out.println(trie2.findString("ACC"));
-        System.out.println(trie2.findString("TAC"));
-        System.out.println(trie2.findString("TA"));
-        System.out.println(trie2.findString("CAT"));
+        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
 
+        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
+
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4"));
+
+//        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
+//        System.out.println(trie2.findString("AC"));
+//        System.out.println(trie2.findString("ACCGTAC"));
+//        System.out.println(trie2.findString("B"));
+//        System.out.println(trie2.findString("ACC"));
+//        System.out.println(trie2.findString("TAC"));
+//        System.out.println(trie2.findString("TA"));
+//        System.out.println(trie2.findString("CAT"));
+
+//        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
 
     }
 
