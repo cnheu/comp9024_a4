@@ -27,21 +27,20 @@ public class CompressedSuffixTrie {
     int ALPHABET_SIZE = 4;
     SuffixTrieNode root;
     char[] sourceArray;
-    String sourceString;
+    int sourceSize;
 
     /** Constructor */
     public CompressedSuffixTrie (String f) {
         //TODO: create a compressed suffix trie from file f
 
         root = new SuffixTrieNode(null,null,-1);
-//        String sourceString = fileToString(f);
-        sourceString = "ACCGTAC";
-        sourceString += "$";
+        String sourceString = fileToString(f) + "$";
         sourceArray = sourceString.toCharArray();
+        sourceSize = sourceArray.length;
 
 //        String[] myString = generateSuffixes(analysisString);
-        int[] suffixStartIndexArray = new int[8];
-        String[] suffixStringArray = new String[8];
+        int[] suffixStartIndexArray = new int[sourceArray.length];
+        String[] suffixStringArray = new String[sourceArray.length];
         generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
 
 
@@ -52,79 +51,29 @@ public class CompressedSuffixTrie {
         }
 
 //        this.printLabels();
-
+//
         compressSuffixTrie();
-        this.printLabels();
-        findString("AC");
+//        this.printLabels();
 
-        findString("ACCGTAC");
-        findString("B");
-        findString("ACC");
-        findString("TAC");
-        findString("TA");
-        findString("CAT");
     }
-
-//    /** Method for finding the first occurrence of a pattern s in the DNA sequence.
-//     * This works with non-compressed suffixTrie */
-//    public int findString (String query) {
-//        try {
-//            //TODO: define method
-//            query += "$";
-//            SuffixTrieNode node = this.root;
-//            char[] suffixArray = query.toCharArray();
-//            int childIndex;
-//
-//            for (int suffixIndex = 0; suffixIndex < suffixArray.length; suffixIndex++) {
-//                childIndex = mapCharToIndex(suffixArray[suffixIndex]);
-//                if (childIndex == -1) {
-//                    throw new InvalidAttributeValueException("Invalid character not part of alphabet ACGT");
-//                }
-//
-//                // Check this child exists
-//                if (node.getChild(childIndex) == null) {
-//                    System.out.println("Suffix: " + query + " was not found at charIndex: " + suffixIndex);
-//                    return 0;
-//                } else {
-//                    // check for end state
-//                    if (suffixIndex == suffixArray.length - 1) {
-//                        if (!node.getChild(childIndex).label().equals("$")) {
-//                            System.out.println("My dollar sign at final node: " + node.getChild(childIndex).label());
-//                            System.out.println("My dollar sign at final node class is: " + node.getChild(childIndex).label().getClass());
-//                            System.out.println("Suffix: " + query + " was not found with marker $");
-//                            return 0;
-//                        }
-//                        break;
-//                    }
-//                    //                else if (node.getChild(childIndex).label() != Character.toString(suffixArray[suffixIndex])) {
-//                    //                    System.out.println("Label not matching char at index: " + suffixIndex);
-//                    //                }
-//                    node = node.getChild(childIndex);
-//                }
-//            }
-//            System.out.println(query);
-//        }
-//        catch (InvalidAttributeValueException e) {
-//            System.out.println("Invalid character in string to be found that is not in the alphabet ACGT");
-//        }
-//        return 1;
-//    }
 
     /** Method for finding the first occurrence of a pattern s in the DNA sequence.
      * Designed for non-compressed suffixTrie */
     public int findString (String query) {
+        int indexOfFirstChar = -1;
+        int childIndex;
+        SuffixTrieNode node = this.root;
+
+        LinkedList queryList = new LinkedList<>(); // O(1) - peek, pop, add functions.
+
+        char[] queryArray = query.toCharArray();
+        for (char c : queryArray) {
+            queryList.add(c);
+        }
+        int sizeOfQuery = queryList.size();
+
+
         try {
-            //TODO: define method
-//            query += "$";
-            SuffixTrieNode node = this.root;
-            char[] queryArray = query.toCharArray();
-            LinkedList queryList = new LinkedList<>(); //TODO: fix this
-
-            for (char c : queryArray) {
-                queryList.add(c);
-            }
-
-            int childIndex;
 
             /**
              1. Visit the childNode with compact label starting at current queryIndex
@@ -141,17 +90,22 @@ public class CompressedSuffixTrie {
 
                 if (node.getChild(childIndex) == null) {
                     System.out.println("Suffix: " + query + " was not found");
-                    return 0;
+                    return -1;
                 } else {
                     int startIndex = node.getChild(childIndex).compactLabel()[0];
                     int endIndex = node.getChild(childIndex).compactLabel()[1];
+//                    if (indexOfFirstChar < 0) indexOfFirstChar = startIndex;
+
                     for (int i = startIndex; i <= endIndex; i++) { // cross reference each char in the queryList with the char at index in the original sourceArray
                         char charInQuery = (char) queryList.pop();
                         if (sourceArray[i] != charInQuery) {
                             System.out.println("Suffix: " + query + " was not found at char: " + charInQuery);
-                            return 0;
+                            return -1;
                         }
-                        if (queryList.isEmpty()) break;
+                        if (queryList.isEmpty()) {
+                            indexOfFirstChar = i - (sizeOfQuery - 1);
+                            break;
+                        }
                     }
                     node = node.getChild(childIndex); // advance the node
                 }
@@ -161,8 +115,9 @@ public class CompressedSuffixTrie {
         }
         catch (InvalidAttributeValueException e) {
             System.out.println("Invalid character in string to be found that is not in the alphabet ACGT");
+            return -1;
         }
-        return 1;
+        return indexOfFirstChar;
     }
 
     /** Method for computing the degree of similarity of two DNA sequences stored in the text files f1 and f2 */
@@ -339,42 +294,11 @@ public class CompressedSuffixTrie {
     public void printLabels() {
         SuffixTrieNode node = this.root;
 //        LinkedList<String> store = new LinkedList<String>();
-        int queueSize = (8 * 9) / 2;
+        int queueSize = (sourceSize * (sourceSize+1)) / 2;
         ArrayQueue<SuffixTrieNode> store = new ArrayQueue<>(queueSize);
         printLabelsHelper(node, store);
     }
 
-    /** DFS based print */
-//    public void printLabelsHelper(SuffixTrieNode node, LinkedList<String> store) {
-//
-//        if (node.label!= null) {
-//            store.add(node.label());
-//            char[] labelArray = node.label().toCharArray();
-//
-//            if (labelArray[labelArray.length-1] == '$') {
-////            if (node.label().equals("$")) {
-//                String suffix = "";
-//                for (String label : store) {
-//                    suffix += label;
-//                }
-//                System.out.println(suffix);
-//                store.removeLast();
-//                return;
-//            }
-//        }
-//
-//        for (int childIndex = 0; childIndex < 5; childIndex ++) {
-//            if (node.getChild(childIndex) != null) {
-//                printLabelsHelper(node.getChild(childIndex), store);
-//            }
-//        }
-//
-//        if (node.label!=null) {
-//            store.removeLast(); // remove this node's label from store once it's children have all been examined
-//        }
-//        return;
-//    }
-//
     /** Level Order Print */
     public void printLabelsHelper(SuffixTrieNode root, ArrayQueue<SuffixTrieNode> store) {
         store.add(root);
@@ -428,29 +352,6 @@ public class CompressedSuffixTrie {
             else {
                 compressSuffixTrieHelper(node);
             }
-
-//            for (int childIndex = 0; childIndex < 5; childIndex++) { // O(s)
-//                if (node.getChild(childIndex) != null) {
-//                    childNode = node.getChild(childIndex);
-//
-//                    // concatenate current node's label to include childNode's label
-//                    node.setLabel(node.label() + childNode.label());
-//
-//                    // re-set numOfChildren for this node == childNode
-//                    node.numOfChildren = childNode.numOfChildren;
-//                    // delete currentNode.children, delete childNode
-//
-//                    // make currentNode children point childNode's children
-//                    node.setChildren(childNode.getChildren());
-//
-//                    if (childNode.label().equals("$")) return;
-//                    else {
-//                        compressSuffixTrieHelper(node);
-//                        break;
-//                    }
-//                }
-//            }
-
         }
         else {
             for (int childIndex = 0; childIndex < 5; childIndex++) {
@@ -469,13 +370,24 @@ public class CompressedSuffixTrie {
     /** Construct a trie named trie1 */
         CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
 
-//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG"));
+//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
 //
-//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG"));
+//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
 //
-//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT"));
+//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
 //
 //        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4"));
+
+        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
+        System.out.println(trie2.findString("AC"));
+        System.out.println(trie2.findString("ACCGTAC"));
+        System.out.println(trie2.findString("B"));
+        System.out.println(trie2.findString("ACC"));
+        System.out.println(trie2.findString("TAC"));
+        System.out.println(trie2.findString("TA"));
+        System.out.println(trie2.findString("CAT"));
+
+
     }
 
 }
