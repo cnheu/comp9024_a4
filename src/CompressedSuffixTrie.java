@@ -488,29 +488,30 @@ public class CompressedSuffixTrie {
     public static void main(String args[]) throws Exception{
 
     /** Construct a trie named trie1 */
-//        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
-//
-//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
-//
-//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
-//
-//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
-//
-//        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
-//
-//        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
-//        trie2.printLabels();
-//
-//        System.out.println("AC is at: " + trie2.findString("AC")); // 0
-//        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
-//        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
-//        System.out.println("B is at: " + trie2.findString("B")); // -1
-//        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
-//        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
-//        System.out.println("TA is at: " + trie2.findString("TA")); // 4
-//        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
+        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
+
+        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
+
+        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
+
+        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
+
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
+
+        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
+        trie2.printLabels();
+
+        System.out.println("AC is at: " + trie2.findString("AC")); // 0
+        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
+        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
+        System.out.println("B is at: " + trie2.findString("B")); // -1
+        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
+        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
+        System.out.println("TA is at: " + trie2.findString("TA")); // 4
+        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
 
         CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
+        trie3.printLabels();
         System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file9")); // Solution: 0.23809524
 
 
