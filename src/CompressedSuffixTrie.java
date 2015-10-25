@@ -130,15 +130,18 @@ public class CompressedSuffixTrie {
      * @return
      */
     public static float similarityAnalyser(String f1, String f2, String f3) {
-        char[] f1Array = fileToString(f1).toCharArray(); // O(1)
-        char[] f2Array = fileToString(f2).toCharArray(); // O(1)
+        char[] f1Array = fileToString(f1).toCharArray(); // O(m)
+        char[] f2Array = fileToString(f2).toCharArray(); // O(n)
 
         String lcs = longestCommonSubsequence(f1Array, f2Array, f3); // O(mn) - see below
 
         if (!lcs.equals("")) stringToFile(f3,lcs); // O(|s|) - where s is the number of chars in lcs. It is <= m+n.
-
+//        System.out.println(lcs);
         float num = (float) lcs.length(); // O(1)
         float den = (float) Math.max(f1Array.length, f2Array.length); // O(1)
+//        System.out.println(num);
+//        System.out.println(f1Array.length);
+//        System.out.println(f2Array.length);
         return num/den;
     }
 
@@ -160,20 +163,41 @@ public class CompressedSuffixTrie {
 
         for (int i = 0; i < f1.length; i++) {
             for (int j = 0; j < f2.length; j++) {
-                // If the chars at i and j don't save "" in store[i][j].
-                if (f1[i] != f2[j]) store[i][j] = "";
-                else { // matched at this i,j
-                    // If we're on the top row or left col, simply store the char as a string
-                    if (i == 0 || j == 0) {
-                        store[i][j] = Character.toString(f1[i]);
-                    } else { // store the concatenation of current char and string at i-1,j-1 (building a subsequence)
-                        store[i][j] = store[i - 1][j - 1] + Character.toString(f1[i]);
+                if (i == 0 || j == 0) {
+                    if (f1[i] != f2[j]) store[i][j] = "";
+                    else store[i][j] = Character.toString(f1[i]);
+                }
+                else {
+                    if (f1[i] != f2[j]) {
+                        int l1 = store[i-1][j].length();
+                        int l2 = store[i][j-1].length();
+                        if (l1 > l2) store[i][j] = store[i-1][j];
+                        else store[i][j] = store[i][j-1];
                     }
-                    // After concatenation/ visiting this i,j, if the length of string is greater than current LCS, re-assign LCS.
-                    if (store[i][j].length() >= lcs.length()) lcs = store[i][j];
+                    else store[i][j] = store[i - 1][j - 1] + Character.toString(f1[i]);
                 }
             }
         }
+
+        lcs = store[f1.length -1][f2.length-1];
+
+        // Incorrect algorithm for substring calculation
+//        for (int i = 0; i < f1.length; i++) {
+//            for (int j = 0; j < f2.length; j++) {
+//                // If the chars at i and j don't save "" in store[i][j].
+//                if (f1[i] != f2[j]) store[i][j] = "";
+//                else { // matched at this i,j
+//                    // If we're on the top row or left col, simply store the char as a string
+//                    if (i == 0 || j == 0) {
+//                        store[i][j] = Character.toString(f1[i]);
+//                    } else { // store the concatenation of current char and string at i-1,j-1 (building a subsequence)
+//                        store[i][j] = store[i - 1][j - 1] + Character.toString(f1[i]);
+//                    }
+//                    // After concatenation/ visiting this i,j, if the length of string is greater than current LCS, re-assign LCS.
+//                    if (store[i][j].length() >= lcs.length()) lcs = store[i][j];
+//                }
+//            }
+//        }
 //        System.out.println(lcs);
         return lcs;
     }
@@ -502,24 +526,24 @@ public class CompressedSuffixTrie {
 
         System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
 
-        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.9096386
 
-        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
-        trie2.printLabels();
 
-        System.out.println("AC is at: " + trie2.findString("AC")); // 0
-        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
-        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
-        System.out.println("B is at: " + trie2.findString("B")); // -1
-        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
-        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
-        System.out.println("TA is at: " + trie2.findString("TA")); // 4
-        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
+//        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
+//        trie2.printLabels();
+
+//        System.out.println("AC is at: " + trie2.findString("AC")); // 0
+//        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
+//        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
+//        System.out.println("B is at: " + trie2.findString("B")); // -1
+//        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
+//        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
+//        System.out.println("TA is at: " + trie2.findString("TA")); // 4
+//        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
 
         CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
         trie3.printLabels();
-        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file9")); // Solution: 0.23809524
-
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file9")); // Solution: 0.7619048
 
     }
 
