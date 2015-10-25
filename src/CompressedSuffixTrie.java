@@ -1,39 +1,48 @@
-import com.sun.jmx.remote.internal.ArrayQueue;
-import java.io.FileNotFoundException;
+import net.datastructures.NodeQueue;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.io.File;
 import java.util.*;
 import java.lang.Math;
 import javax.naming.directory.InvalidAttributeValueException;
 
 
 /**
- * Created by christophernheu on 17/10/2015.
+ * Title: Assignment 4
+ * Course: COMP9024 - Semester 2, 2015
+ * Author: Christopher Nheu
+ * Author ID: z3240967
  */
 public class CompressedSuffixTrie {
-    //TODO: Define data structures for the compressed trie
     int ALPHABET_SIZE = 4;
     SuffixTrieNode root;
     char[] sourceArray;
     int sourceSize;
 
-    /** Constructor */
-    public CompressedSuffixTrie (String f) {
+    /**
+     * Constructor - the overall strategy is to 1) create non-compressed suffixTrie, 2) do a pass through the suffixTrie and compress/compactify it
+     * We store both a label as a String and the compactLabel as an array of Integers to represent the CompressedSuffixTrie ADT.
+     *
+     * Time Complexity: O(n2) - where n is the number of characters in the original source string.
+     * Note: if time permits we could carry out Ukkonen's SuffixTrie constructor algorithm
+     *
+     * @param f
+     * @throws Exception
+     */
+
+    public CompressedSuffixTrie (String f) throws Exception {
 
         // Initialise class attributes
-        root = new SuffixTrieNode(null,-1);
-        String sourceString = fileToString(f) + "$";
+        root = new SuffixTrieNode(null,-1); // O(1)
+        String sourceString = fileToString(f);
+        if (sourceString == null) return; // early return if the file did not exist or it was empty.
 
+        sourceString += "$";
         sourceArray = sourceString.toCharArray();
         sourceSize = sourceArray.length;
 
-        System.out.println(sourceString);
-
-        constructSuffixTrie(sourceString);
-//
-        compressSuffixTrie();
-        System.out.println("end");
+        constructSuffixTrie(sourceString); // O(n2)
+        compressSuffixTrie(root); // O(n2)
 
     }
 
@@ -106,6 +115,9 @@ public class CompressedSuffixTrie {
 
         String lcs = longestCommonSubsequence(f1Array, f2Array, f3);
 
+        if (!lcs.equals("")) stringToFile(f3,lcs);
+
+
         float num = (float) lcs.length();
         float den = (float) Math.max(f1Array.length, f2Array.length);
         return num/den;
@@ -146,61 +158,62 @@ public class CompressedSuffixTrie {
     }
 
     /** Nested protected class SuffixTrieNode which adapts the Node class for our purposes */
-    public class SuffixTrieNode {
+    protected class SuffixTrieNode {
 
-
-        protected String label;  // label stored at this node
-        protected int[] compactLabel;
-        protected SuffixTrieNode parent;  // adjacent node
-        protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1); //TODO: check that the max size of CompressedSuffixTrie children is AlphabetSize;  // children nodes
+        protected String label;  // label stored at this node, note: internally we include $ within label
+        protected int[] compactLabel; // compact version of the label stored at this node
+        protected ArrayList<SuffixTrieNode> children = new ArrayList<>(ALPHABET_SIZE+1);  // store pointers to other child nodes inside an ArrayList
         protected int stringIndex;
         protected int numOfChildren;
 
-        /** Main constructor */
-        public SuffixTrieNode(String label, int index) {
-            setLabel(label);
-            numOfChildren = 0;
-            compactLabel = new int[2];
-            stringIndex = index;
-            compactLabel[0] = index;
-            compactLabel[1] = index;
-            
-            for (int i = 0; i < ALPHABET_SIZE + 1; i++) {
+        /** Main constructor
+         *  Time Complexity: O(1)
+         */
+        protected SuffixTrieNode(String label, int index) {
+            setLabel(label); // O(1)
+            numOfChildren = 0; // O(1)
+            compactLabel = new int[2]; // O(1)
+            stringIndex = index; // O(1)
+            compactLabel[0] = index; // O(1)
+            compactLabel[1] = index; // O(1)
+
+            for (int i = 0; i < ALPHABET_SIZE + 1; i++) { // O(5)
                 children.add(i,null);
             }
-
         }
+
         /** Returns the label stored at this position */
-        public String label() { return label; }
+        protected String label() { return label; }
 
         /** Sets the label stored at this position */
-        public void setLabel(String o) { label=o; }
+        protected void setLabel(String o) { label=o; }
 
         /** Returns the compactLabel stored at this position */
-        public int[] compactLabel() { return compactLabel; }
+        protected int[] compactLabel() { return compactLabel; }
 
         /** Sets the second integer of compactLabel stored at this position, used for updating during construction */
-        public void setCompactLabel(int newIndex) { compactLabel[1] = newIndex; }
+        protected void setCompactLabel(int newIndex) { compactLabel[1] = newIndex; }
 
-        /** Returns the children of this position */
-        public ArrayList<SuffixTrieNode> getChildren() { return children; }
+        /** Returns the children ArrayList at this node */
+        protected ArrayList<SuffixTrieNode> getChildren() { return children; }
 
-        /** Returns the child at a given index */
-        public SuffixTrieNode getChild(int index) {
+        /** Returns the child at a given index in children */
+        protected SuffixTrieNode getChild(int index) {
             return children.get(index);
         }
 
-        /** Sets the right child of this position */
-        public void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
+        /** Sets the children ArrayList at this position */
+        protected void setChildren(ArrayList<SuffixTrieNode> c) { children=c; }
 
         /** Add individual child node based on index **/
-        public void setChild(int index, SuffixTrieNode child) {
+        protected void setChild(int index, SuffixTrieNode child) {
             this.children.set(index, child);
             numOfChildren ++;
         }
 
-        protected int locateSingleChildIndex() {
-            for (int childIndex = 0; childIndex < 5; childIndex ++) {
+        /** Determine if the non-compressed node has a child or not. If it does have a child, return the index of the child */
+        protected int locateSingleChildIndex() { // O(1)
+            for (int childIndex = 0; childIndex < 5; childIndex ++) { // O(5)
                 if (this.getChild(childIndex) != null) {
                     return childIndex;
                 }
@@ -208,28 +221,33 @@ public class CompressedSuffixTrie {
             return -1;
         }
 
-        public String toString() { return this.label; }
+        /** Used for when the node is printed. Presents nodes in a format that includes both compacted version AND non-compacted version: E.g. AC - (0, 1) */
+        public String toString() { return this.label + " - (" + this.compactLabel[0] + ", " + this.compactLabel[1] + ")"; }
     }
 
-    /** Convert file into String */
-    protected static String fileToString(String fileName) {
+    /**
+     * fileToString - Reads the file and outputs a string
+     *
+     * Time Complexity: O(n) - where n is the number of characters in the file
+     *
+     * @param file
+     * @return
+     */
+    protected static String fileToString(String file) {
         Path path = Paths.get("");
-        fileName = path.toAbsolutePath().toString() + "/" + fileName + ".txt";
-        System.out.println(fileName);
-        File file = new File(fileName);
-        String inputString = ""; // O(1)
+        file = path.toAbsolutePath().toString() + "/" + file + ".txt";
+        File f = new File(file);
+        String inputString = "";
         char[] next;
 
         try {
-            Scanner input = new Scanner(file);
-            while (input.hasNext()) { // O(n) - at worst, if each task attribute is on a separate line
-                next = input.next().toCharArray();
-                // filter each char to make sure they are inside the alphabet
-                for (char c: next) {
-                    if (mapCharToIndex(c) >= 0 || mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // mapCharToIndex verifies that the char is part of the alphabet
+            Scanner input = new Scanner(f);
+            while (input.hasNext()) { // O(n) - where n is the number of characters in the file
+                next = input.next().toCharArray();  // O(s) - where s is the number of characters in each iteration
+                // Filter each char to make sure they are inside the alphabet
+                for (char c: next) { // O(s) - where s is the number of characters in each iteration
+                    if (mapCharToIndex(c) >= 0 || mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // O(1)
                 }
-                // Check each iteration of inputString for diagnostics
-//                System.out.println(inputString);
             }
             if (inputString == "") throw new Exception("(Input task file empty)");
         }
@@ -244,124 +262,154 @@ public class CompressedSuffixTrie {
         return inputString;
     }
 
+    /**
+     * stringToFile - take the string and output it to a file
+     *
+     * Time Complexity - O(1)
+     *
+     * @param file
+     * @param outputString
+     */
+    protected static void stringToFile(String file, String outputString) {
+        Path path = Paths.get(""); // O(1)
+        file = path.toAbsolutePath().toString() + "/" + file + ".txt"; // O(1)
+        try {
+            PrintWriter outputStream = new PrintWriter(file); // O(1)
+            outputStream.println(outputString); // O(1)
+            outputStream.close(); // O(1)
+        }
+        catch (IOException e) {
+            System.out.println("[ERROR] File: " + file + " already exists in this directory");
+        }
+    }
 
     /** Generate suffixes from inputString */
+    /**
+     * generateSuffixes - takes the inputString and stores data into suffixStringArray and suffixStartIndexArray
+     *
+     * Time Complexity: O(n2)
+     *
+     * @param inputString
+     * @param suffixStringArray
+     * @param suffixStartIndexArray
+     */
     protected void generateSuffixes(String inputString, String[] suffixStringArray, int[] suffixStartIndexArray) {
-        int size = inputString.length();
+        int size = inputString.length(); // O(1)
 
-        for (int i = 0; i < size; i++) {
-            suffixStringArray[i] = inputString.substring(i,size);
-            suffixStartIndexArray[i] = i;
+        // As we loop through the inputString, we want to both the actual characters of the substring
+        for (int i = 0; i < size; i++) { // O(n2) - number of char in the the source inputString
+            suffixStringArray[i] = inputString.substring(i,size); // O(s) - s is the number of characters in the suffix, since substring creates a
+            suffixStartIndexArray[i] = i; // O(1)
         }
     }
 
-    /** Construct non-compressed, non-compact suffix trie
+    /**
+     * constructSuffixTrie - builds a non-compressed, non-compact suffixTrie
      *
+     * Time Complexity: O(n2)
      *
+     * 1. Generates suffixes storing labels and starting indices inside suffixStringArray, suffixStartIndexArray
+     * 2. Add each suffix to the suffixTrie
+     *
+     * @param sourceString
      */
-
     protected void constructSuffixTrie(String sourceString) {
 
-        int[] suffixStartIndexArray = new int[sourceArray.length];
-        String[] suffixStringArray = new String[sourceArray.length];
+        int[] suffixStartIndexArray = new int[sourceArray.length]; // O(1)
+        String[] suffixStringArray = new String[sourceArray.length]; // O(1)
 
-        generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray);
+        generateSuffixes(sourceString, suffixStringArray, suffixStartIndexArray); // O(n2)
 
-        for (int i = 0; i< suffixStringArray.length; i++) {
-            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]);
+        // We go through each suffix, and in each suffix we iteratively add each character
+        for (int i = 0; i< suffixStringArray.length; i++) { // O(n2) - since the total number of chars  (n * (n+1) / 2)
+            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]); // O(s) - s is the number of chars in the suffix
         }
     }
 
-    /** Add a suffix to the CompressedSuffixTrie */
-    protected void addSuffix(String suffix, int suffixStartIndex) { // O(n) - n is the number of characters
+    /**
+     * addSuffix - adds a suffix to the CompressedSuffixTrie
+     *
+     * Time Complexity: O(s) {where s is the number of characters in the suffix}
+     *
+     * @param suffix
+     * @param suffixStartIndex
+     */
+    protected void addSuffix(String suffix, int suffixStartIndex) { // O(s) - s is the number of characters in suffix
         char[] suffixArray = suffix.toCharArray(); // O(n)
-        SuffixTrieNode node = this.root;
-        int childIndex = 0;
-//        ArrayList<SuffixTrieNode> childrenArrayList;
+        SuffixTrieNode node = this.root; // O(1)
+        int childIndex; // O(1)
 
-        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) {
-            // get the index
-            childIndex = mapCharToIndex(suffixArray[stringIndex]);
+        // Loop through all the characters in the suffix one at a time
+        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) { // O(s)
+            // Get the index of the char
+            childIndex = mapCharToIndex(suffixArray[stringIndex]); // O(1)
 
-            // check to see that the child exists
-            if (node.getChild(childIndex) == null) {
+            // If the child doesn't exist, we instantiate a new node and we set it as the child
+            if (node.getChild(childIndex) == null) { // O(1)
 
-                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), suffixStartIndex+stringIndex);
-                node.setChild(childIndex, childNode);
+                SuffixTrieNode childNode = new SuffixTrieNode(Character.toString(suffixArray[stringIndex]), suffixStartIndex+stringIndex); // O(1)
+                node.setChild(childIndex, childNode); // O(1)
             }
-            // now move to the next node
-            node = node.getChild(childIndex);
+            // Now we move to the child.
+            node = node.getChild(childIndex); // O(1)
         }
     }
 
-    public void compressSuffixTrie() {
-        SuffixTrieNode node = this.root;
-        compressSuffixTrieHelper(node);
-
-    }
-
-    // Depth First Search
-    protected void compressSuffixTrieHelper(SuffixTrieNode node) {
+    /**
+     * compressSuffixTrie - performs recursive, depth first search and iteratively updates labels and compactLabels. The suffixTrie becomes compact and compressed.
+     *
+     * Time Complexity: O(n2) - where n is the total number of characters in the source string. I.e. n * (n+1) / 2
+     *
+     * @param node
+     */
+    public void compressSuffixTrie(SuffixTrieNode node) {
+        // If the node has only one child, we want to concatenate the node and the childNode's label, and also update the compactLabel.
         if (node.label!= null && node.numOfChildren == 1) { // not at root and we have one child
-//            SuffixTrieNode childNode;
-//            // find the child node which we know exists
-//            int childIndex = node.locateSingleChildIndex(); // O(5)
-//
-//            childNode = node.getChild(childIndex);
-//
-//            // concatenate current node's label to include childNode's label
-//            node.setLabel(node.label() + childNode.label());
-//
-//            // update current node's compactLabel, second index to the childNode's index
-//            node.setCompactLabel(childNode.compactLabel()[0]);
-//
-//            // re-set numOfChildren for this node == childNode
-//            node.numOfChildren = childNode.numOfChildren;
-//            // delete currentNode.children, delete childNode
-//
-//            // make currentNode children point childNode's children
-//            node.setChildren(childNode.getChildren());
-//
-//            if (childNode.label().equals("$")) return;
-//            else {
-//                compressSuffixTrieHelper(node);
-//            }
-
 
             SuffixTrieNode childNode;
-            // find the child node which we know exists
-            int childIndex = node.locateSingleChildIndex(); // O(5)
 
-            childNode = node.getChild(childIndex);
+            // Find the child node which we know exists
+            int childIndex = node.locateSingleChildIndex(); // O(1)
 
-            if (childNode.label().equals("$")) return; // we don't need to go anything
+            // Select the childNode
+            childNode = node.getChild(childIndex); // O(1)
 
-            // concatenate current node's label to include childNode's label
-            node.setLabel(node.label() + childNode.label());
+            if (childNode.label().equals("$")) return; // If we're at "$" node, we don't need to go anything
 
-            // update current node's compactLabel, second index to the childNode's index
-            node.setCompactLabel(childNode.compactLabel()[0]);
+            // Concatenate childNode's label to current node's label
+            node.setLabel(node.label() + childNode.label()); // O(1)
 
-            // re-set numOfChildren for this node == childNode
-            node.numOfChildren = childNode.numOfChildren;
-            // delete currentNode.children, delete childNode
+            // Update current node's compactLabel, second index to the childNode's index
+            node.setCompactLabel(childNode.compactLabel()[0]); // O(1)
 
-            // make currentNode children point childNode's children
-            node.setChildren(childNode.getChildren());
+            // Update numOfChildren for this node == childNode
+            node.numOfChildren = childNode.numOfChildren; // O(1)
 
-            compressSuffixTrieHelper(node);
+            // Update pointer for current node to point at childNode's children
+            node.setChildren(childNode.getChildren()); // O(1)
+
+            // Make recursive call for this node again
+            compressSuffixTrie(node);
         }
-        else { // we are at root or a node with more than one child
+        else { // We are at root or a node with more than one child, we cannot compress/compactify this node any further
+            // Hence we need to go into each of this node's children.
             for (int childIndex = 0; childIndex < 5; childIndex++) {
                 if (node.getChild(childIndex) != null) {
-                    compressSuffixTrieHelper(node.getChild(childIndex));
+                    compressSuffixTrie(node.getChild(childIndex));
                 }
             }
         }
         return;
     }
 
-    /** Simple map from char to index in the children ArrayList */
+    /**
+     * mapCharToIndex - map the char c to an index of a char in the Alphabet
+     *
+     * Time Complexity: O(1)
+     *
+     * @param c
+     * @return
+     */
     protected static int mapCharToIndex(char c) { // O(1)
         if (c == 'A') {
             return 0;
@@ -381,28 +429,36 @@ public class CompressedSuffixTrie {
         else return -1;
     }
 
+    /**
+     * printLabels - performs level order traversal to view each node's label and compactLabel. It could be vastly improved.
+     *
+     * Time Complexity: O(s) - where s is the number of nodes in a compressedSuffixTrie
+     */
     protected void printLabels() {
+        // Do not print if empty
+        if (sourceArray == null) {
+            System.out.println("[ERROR] This suffixTrie is empty");
+            return;
+        }
+
         SuffixTrieNode root = this.root;
-        int queueSize = (sourceSize * (sourceSize+1)) / 2;
-        ArrayQueue<SuffixTrieNode> store = new ArrayQueue<>(queueSize);
-        store.add(root);
+        NodeQueue<SuffixTrieNode> store = new NodeQueue<>();
+        store.enqueue(root);
 
+        // Only visit each node once
         while (!store.isEmpty()) {
-            SuffixTrieNode node = store.remove(0);
+            // Dequeue the node to be visited
+            SuffixTrieNode node = store.dequeue(); // O(1)
 
-            // perform visit
-
+            // Perform visit by printing
             if (node.label!=null) {
-                if (!node.label.equals("$")) {
-                    String output = node.label() + " - (" + node.compactLabel()[0] + ", " + node.compactLabel()[1] + ")";
-                    System.out.println(output);
-                }
+                if (!node.label.equals("$")) System.out.println(node); // O(1)
             }
 
-            // loop through children and append them as required
+            // Enqueue all available children
             for (int childIndex = 0; childIndex < 5; childIndex++) {
                 if (node.getChild(childIndex) != null) {
-                    store.add(node.getChild(childIndex));
+                    store.enqueue(node.getChild(childIndex)); // O(1)
                 }
             }
         }
@@ -411,26 +467,26 @@ public class CompressedSuffixTrie {
     public static void main(String args[]) throws Exception{
 
     /** Construct a trie named trie1 */
-//        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
-//
-//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
-//
-//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
-//
-//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
-//
-//        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
+        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
+
+        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
+
+        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
+
+        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
+
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
 
         CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
         trie2.printLabels();
 
-//        System.out.println(trie2.findString("AC"));
-//        System.out.println(trie2.findString("ACCGTAC"));
-//        System.out.println(trie2.findString("B"));
-//        System.out.println(trie2.findString("ACC"));
-//        System.out.println(trie2.findString("TAC"));
-//        System.out.println(trie2.findString("TA"));
-//        System.out.println(trie2.findString("CAT"));
+//        System.out.println(trie2.findString("AC")); // 0
+//        System.out.println(trie2.findString("ACCGTAC")); // 0
+//        System.out.println(trie2.findString("B")); // -1
+//        System.out.println(trie2.findString("ACC")); // 0
+//        System.out.println(trie2.findString("TAC")); // 4
+//        System.out.println(trie2.findString("TA")); // 4
+//        System.out.println(trie2.findString("CAT")); // -1
 
 //        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
 //        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4")); // Solution: 0.23809524
