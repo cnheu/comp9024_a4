@@ -264,7 +264,7 @@ public class CompressedSuffixTrie {
                 next = input.next().toCharArray();  // O(|s|) - where s is the number of characters in each iteration
                 // Filter each char to make sure they are inside the alphabet
                 for (char c: next) { // O(|s|) - where s is the number of characters in each iteration
-                    if (mapCharToIndex(c) >= 0 || mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // O(1)
+                    if (mapCharToIndex(c) >= 0 && mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // O(1)
                 }
             }
             if (inputString == "") throw new Exception("(Input task file empty)");
@@ -497,21 +497,21 @@ public class CompressedSuffixTrie {
 //        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
 //
 //        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
+//
+//        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
+//        trie2.printLabels();
+//
+//        System.out.println("AC is at: " + trie2.findString("AC")); // 0
+//        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
+//        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
+//        System.out.println("B is at: " + trie2.findString("B")); // -1
+//        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
+//        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
+//        System.out.println("TA is at: " + trie2.findString("TA")); // 4
+//        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
 
-        CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
-        trie2.printLabels();
-
-        System.out.println("AC is at: " + trie2.findString("AC")); // 0
-        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
-        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
-        System.out.println("B is at: " + trie2.findString("B")); // -1
-        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
-        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
-        System.out.println("TA is at: " + trie2.findString("TA")); // 4
-        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
-
-//        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
-//        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4")); // Solution: 0.23809524
+        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
+        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file9")); // Solution: 0.23809524
 
 
     }
