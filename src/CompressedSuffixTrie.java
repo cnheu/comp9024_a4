@@ -1,5 +1,6 @@
 import net.datastructures.NodeQueue;
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -46,87 +47,102 @@ public class CompressedSuffixTrie {
 
     }
 
-    /** Method for finding the first occurrence of a pattern s in the DNA sequence.
-     * Designed for non-compressed suffixTrie */
-    public int findString (String query) {
-        int indexOfFirstChar = -1;
-        int childIndex;
-        SuffixTrieNode node = this.root;
+    /**
+     * findString - finding the first occurrence of a pattern s in the DNA sequence.
+     * Returns -1 if unsuccessful, or index of first char of queryString in the sourceString.
+     *
+     * Time Complexity: O(|s|) - where s is the number of characters in the query string
+     * 
+     * Each char can be visited/assessed at most 1 time, (since it's popped each time). Since each visit takes O(1) time, therefore total time complexity is O(|s|)
+     *
+     * @param queryString
+     * @return
+     */
+    public int findString (String queryString) {
+        int indexOfFirstChar = -1; // O(1)
+        int childIndex; // O(1)
+        SuffixTrieNode node = this.root; // O(1)
+        LinkedList queryList = new LinkedList<>(); // O(1)
+        char[] queryArray = queryString.toCharArray(); // O(|s|)
 
-        LinkedList queryList = new LinkedList<>(); // O(1) - peek, pop, add functions.
-
-        char[] queryArray = query.toCharArray();
-        for (char c : queryArray) {
-            queryList.add(c);
+        // Firstly add all characters to a linked list queryList.
+        for (char c : queryArray) { // O(|s|)
+            queryList.add(c); // O(1)
         }
+        // Store the original size of queryList
         int sizeOfQuery = queryList.size();
 
 
         try {
-
-            /**
-             1. Visit the childNode with compact label starting at current queryIndex
-             2. Check compactLabel endIndex
-             3. for that node, from start to end of compact label, cross-reference each char in queryArray, If it fails
-             4. doesn't end the same we kow we failed.
-             */
-
             while (!queryList.isEmpty()) {
+                // Map the first char in queryList to the childIndex
                 childIndex = mapCharToIndex((char) queryList.peekFirst());
+
+                // If it's not a part of the alphabet found, throw exception.
                 if (childIndex == -1) {
-                    throw new InvalidAttributeValueException("Invalid character not part of alphabet ACGT");
+                    throw new InvalidAttributeValueException("[Error] Query: " + queryString + " has invalid character at " + queryList.peekFirst());
                 }
 
                 if (node.getChild(childIndex) == null) {
-                    System.out.println("Suffix: " + query + " was not found");
-                    return -1;
-                } else {
-                    int startIndex = node.getChild(childIndex).compactLabel()[0];
-                    int endIndex = node.getChild(childIndex).compactLabel()[1];
-
-                    for (int i = startIndex; i <= endIndex; i++) { // cross reference each char in the queryList with the char at index in the original sourceArray
-                        char charInQuery = (char) queryList.pop();
-                        if (sourceArray[i] != charInQuery) {
-                            System.out.println("Suffix: " + query + " was not found at char: " + charInQuery);
-                            return -1;
-                        }
-                        if (queryList.isEmpty()) {
-                            indexOfFirstChar = i - (sizeOfQuery - 1);
-                            break;
-                        }
-                    }
-                    node = node.getChild(childIndex); // advance the node
+                    throw new InvalidAttributeValueException("[Error] Query: " + queryString + " was not found at char: " + queryList.peekFirst());
                 }
-            }
-            System.out.println(query);
 
+                // Store start and end indices in the sourceArray by checking the compactLabel
+                int startIndex = node.getChild(childIndex).compactLabel()[0]; // O(1)
+                int endIndex = node.getChild(childIndex).compactLabel()[1]; // O(1)
+
+                // We want to cross-reference each charInQuery with the sourceArray
+                for (int i = startIndex; i <= endIndex; i++) { 
+                    char charInQuery = (char) queryList.pop(); // O(1)
+                    // If the charInQuery, does not match the sourceArray at the index i, then the queryString was not found.
+                    if (sourceArray[i] != charInQuery) { // O(1)
+                        throw new InvalidAttributeValueException("[Error] Query: " + queryString + " was not found at char: " + charInQuery);
+                    }
+                    // If we've reached the end of the queryString, save the indexOfFirstChar based on the the current i and original sizeOfQuery
+                    if (queryList.isEmpty()) { // O(1)
+                        indexOfFirstChar = i - (sizeOfQuery - 1); // O(1)
+                        break;
+                    }
+                }
+                // Advance to the next childNode 
+                node = node.getChild(childIndex); // O(1) 
+            }
+//            System.out.println(queryString);
         }
         catch (InvalidAttributeValueException e) {
-            System.out.println("Invalid character in string to be found that is not in the alphabet ACGT");
+            System.out.println(e.getMessage());
             return -1;
         }
         return indexOfFirstChar;
     }
 
-    /** Method for computing the degree of similarity of two DNA sequences stored in the text files f1 and f2 */
+    /**
+     * similarityAnalyser - compare two strings in f1, f2 and determine similarity with ratio |lcs|/max(|f1|,|f2|).
+     *
+     * Time Complexity: O(mn) - where m and n are the lengths of string f1 and f2 respectively.
+     *
+     * @param f1
+     * @param f2
+     * @param f3
+     * @return
+     */
     public static float similarityAnalyser(String f1, String f2, String f3) {
-        char[] f1Array = fileToString(f1).toCharArray();
-        char[] f2Array = fileToString(f2).toCharArray();
+        char[] f1Array = fileToString(f1).toCharArray(); // O(1)
+        char[] f2Array = fileToString(f2).toCharArray(); // O(1)
 
-        String lcs = longestCommonSubsequence(f1Array, f2Array, f3);
+        String lcs = longestCommonSubsequence(f1Array, f2Array, f3); // O(mn) - see below
 
-        if (!lcs.equals("")) stringToFile(f3,lcs);
+        if (!lcs.equals("")) stringToFile(f3,lcs); // O(|s|) - where s is the number of chars in lcs. It is <= m+n.
 
-
-        float num = (float) lcs.length();
-        float den = (float) Math.max(f1Array.length, f2Array.length);
+        float num = (float) lcs.length(); // O(1)
+        float den = (float) Math.max(f1Array.length, f2Array.length); // O(1)
         return num/den;
     }
 
     /**
-     * longestCommonSubsequence
+     * longestCommonSubsequence - uses dynamic programming to iteratively generate the longest subsequence
      *
-     * Time Complexity: O(n)
+     * Time Complexity: O(mn) - where m and n are the lengths of string f1 and f2 respectively.
      *
      * Helper function for similarityAnalyser.
      * @param f1
@@ -141,19 +157,21 @@ public class CompressedSuffixTrie {
 
         for (int i = 0; i < f1.length; i++) {
             for (int j = 0; j < f2.length; j++) {
-
+                // If the chars at i and j don't save "" in store[i][j].
                 if (f1[i] != f2[j]) store[i][j] = "";
                 else { // matched at this i,j
+                    // If we're on the top row or left col, simply store the char as a string
                     if (i == 0 || j == 0) {
                         store[i][j] = Character.toString(f1[i]);
-                    } else {
+                    } else { // store the concatenation of current char and string at i-1,j-1 (building a subsequence)
                         store[i][j] = store[i - 1][j - 1] + Character.toString(f1[i]);
                     }
+                    // After concatenation/ visiting this i,j, if the length of string is greater than current LCS, re-assign LCS.
                     if (store[i][j].length() >= lcs.length()) lcs = store[i][j];
                 }
             }
         }
-        System.out.println(lcs);
+//        System.out.println(lcs);
         return lcs;
     }
 
@@ -243,9 +261,9 @@ public class CompressedSuffixTrie {
         try {
             Scanner input = new Scanner(f);
             while (input.hasNext()) { // O(n) - where n is the number of characters in the file
-                next = input.next().toCharArray();  // O(s) - where s is the number of characters in each iteration
+                next = input.next().toCharArray();  // O(|s|) - where s is the number of characters in each iteration
                 // Filter each char to make sure they are inside the alphabet
-                for (char c: next) { // O(s) - where s is the number of characters in each iteration
+                for (char c: next) { // O(|s|) - where s is the number of characters in each iteration
                     if (mapCharToIndex(c) >= 0 || mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // O(1)
                 }
             }
@@ -273,13 +291,16 @@ public class CompressedSuffixTrie {
     protected static void stringToFile(String file, String outputString) {
         Path path = Paths.get(""); // O(1)
         file = path.toAbsolutePath().toString() + "/" + file + ".txt"; // O(1)
+        File f = new File(file);
+
         try {
-            PrintWriter outputStream = new PrintWriter(file); // O(1)
+            if(f.exists()) throw new FileAlreadyExistsException("");
+            PrintWriter outputStream = new PrintWriter(f); // O(1)
             outputStream.println(outputString); // O(1)
             outputStream.close(); // O(1)
         }
         catch (IOException e) {
-            System.out.println("[ERROR] File: " + file + " already exists in this directory");
+            System.out.println("[ERROR] File: " + file + " was not created as it already exists in this directory.");
         }
     }
 
@@ -298,7 +319,7 @@ public class CompressedSuffixTrie {
 
         // As we loop through the inputString, we want to both the actual characters of the substring
         for (int i = 0; i < size; i++) { // O(n2) - number of char in the the source inputString
-            suffixStringArray[i] = inputString.substring(i,size); // O(s) - s is the number of characters in the suffix, since substring creates a
+            suffixStringArray[i] = inputString.substring(i,size); // O(|s|) - s is the number of characters in the suffix, since substring creates a
             suffixStartIndexArray[i] = i; // O(1)
         }
     }
@@ -322,25 +343,25 @@ public class CompressedSuffixTrie {
 
         // We go through each suffix, and in each suffix we iteratively add each character
         for (int i = 0; i< suffixStringArray.length; i++) { // O(n2) - since the total number of chars  (n * (n+1) / 2)
-            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]); // O(s) - s is the number of chars in the suffix
+            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]); // O(|s|) - s is the number of chars in the suffix
         }
     }
 
     /**
      * addSuffix - adds a suffix to the CompressedSuffixTrie
      *
-     * Time Complexity: O(s) {where s is the number of characters in the suffix}
+     * Time Complexity: O(|s|) {where s is the number of characters in the suffix}
      *
      * @param suffix
      * @param suffixStartIndex
      */
-    protected void addSuffix(String suffix, int suffixStartIndex) { // O(s) - s is the number of characters in suffix
+    protected void addSuffix(String suffix, int suffixStartIndex) { // O(|s|) - s is the number of characters in suffix
         char[] suffixArray = suffix.toCharArray(); // O(n)
         SuffixTrieNode node = this.root; // O(1)
         int childIndex; // O(1)
 
         // Loop through all the characters in the suffix one at a time
-        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) { // O(s)
+        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) { // O(|s|)
             // Get the index of the char
             childIndex = mapCharToIndex(suffixArray[stringIndex]); // O(1)
 
@@ -432,7 +453,7 @@ public class CompressedSuffixTrie {
     /**
      * printLabels - performs level order traversal to view each node's label and compactLabel. It could be vastly improved.
      *
-     * Time Complexity: O(s) - where s is the number of nodes in a compressedSuffixTrie
+     * Time Complexity: O(|s|) - where s is the number of nodes in a compressedSuffixTrie
      */
     protected void printLabels() {
         // Do not print if empty
@@ -467,26 +488,27 @@ public class CompressedSuffixTrie {
     public static void main(String args[]) throws Exception{
 
     /** Construct a trie named trie1 */
-        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
-
-        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
-
-        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
-
-        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
-
-        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
+//        CompressedSuffixTrie trie1 = new CompressedSuffixTrie("file1");
+//
+//        System.out.println("ACTTCGTAAG is at: " + trie1.findString("ACTTCGTAAG")); // 5
+//
+//        System.out.println("AAAACAACTTCG is at: " + trie1.findString("AAAACAACTTCG")); // 18
+//
+//        System.out.println("ACTTCGTAAGGTT : " + trie1.findString("ACTTCGTAAGGTT")); // -1
+//
+//        System.out.println(CompressedSuffixTrie.similarityAnalyser("file2", "file3", "file4")); // Solution: 0.12048193
 
         CompressedSuffixTrie trie2 = new CompressedSuffixTrie("file5");
         trie2.printLabels();
 
-//        System.out.println(trie2.findString("AC")); // 0
-//        System.out.println(trie2.findString("ACCGTAC")); // 0
-//        System.out.println(trie2.findString("B")); // -1
-//        System.out.println(trie2.findString("ACC")); // 0
-//        System.out.println(trie2.findString("TAC")); // 4
-//        System.out.println(trie2.findString("TA")); // 4
-//        System.out.println(trie2.findString("CAT")); // -1
+        System.out.println("AC is at: " + trie2.findString("AC")); // 0
+        System.out.println("ACCGTAC is at: " + trie2.findString("ACCGTAC")); // 0
+        System.out.println("ACCGTT is at: " + trie2.findString("ACCGTT")); // 0
+        System.out.println("B is at: " + trie2.findString("B")); // -1
+        System.out.println("ACC is at: " + trie2.findString("ACC")); // 0
+        System.out.println("TAC is at: " + trie2.findString("TAC")); // 4
+        System.out.println("TA is at: " + trie2.findString("TA")); // 4
+        System.out.println("CAT is at: " + trie2.findString("CAT")); // -1
 
 //        CompressedSuffixTrie trie3 = new CompressedSuffixTrie("file6");
 //        System.out.println(CompressedSuffixTrie.similarityAnalyser("file7", "file8", "file4")); // Solution: 0.23809524
