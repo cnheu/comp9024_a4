@@ -25,7 +25,10 @@ public class CompressedSuffixTrie {
      * We store both a label as a String and the compactLabel as an array of Integers to represent the CompressedSuffixTrie ADT.
      *
      * Time Complexity: O(n2) - where n is the number of characters in the original source string.
-     * Note: if time permits we could carry out Ukkonen's SuffixTrie constructor algorithm
+     *
+     * Note 1: if time permits we could carry out Ukkonen's SuffixTrie constructor algorithm
+     * Note 2: we have purposely decided to include the $ as part of the original sourceString and sourceArray.
+     * Thus to be consistent, there is a node with '$' for EACH suffix in the sourceString.
      *
      * @param f
      * @throws Exception
@@ -395,7 +398,8 @@ public class CompressedSuffixTrie {
             // Select the childNode
             childNode = node.getChild(childIndex); // O(1)
 
-            if (childNode.label().equals("$")) return; // If we're at "$" node, we don't need to go anything
+//            PLACE HERE IF do not want $ included in the nodes labels
+//            if (childNode.label().equals("$")) return; // If we're at "$" node, we don't need to go anything.
 
             // Concatenate childNode's label to current node's label
             node.setLabel(node.label() + childNode.label()); // O(1)
@@ -409,13 +413,14 @@ public class CompressedSuffixTrie {
             // Update pointer for current node to point at childNode's children
             node.setChildren(childNode.getChildren()); // O(1)
 
+            if (childNode.label().equals("$")) return; // If we're at "$" node, we don't need to go anything.
             // Make recursive call for this node again
             compressSuffixTrie(node);
         }
         else { // We are at root or a node with more than one child, we cannot compress/compactify this node any further
             // Hence we need to go into each of this node's children.
             for (int childIndex = 0; childIndex < 5; childIndex++) {
-                if (node.getChild(childIndex) != null) {
+                if (node.getChild(childIndex) != null) { // O(1)
                     compressSuffixTrie(node.getChild(childIndex));
                 }
             }
@@ -472,9 +477,10 @@ public class CompressedSuffixTrie {
             SuffixTrieNode node = store.dequeue(); // O(1)
 
             // Perform visit by printing
-            if (node.label!=null) {
-                if (!node.label.equals("$")) System.out.println(node); // O(1)
-            }
+//            if (node.label!=null) {
+//                if (!node.label.equals("$")) System.out.println(node); // O(1)
+//            }
+            if (node.label!=null) System.out.println(node); // O(1)
 
             // Enqueue all available children
             for (int childIndex = 0; childIndex < 5; childIndex++) {
