@@ -54,9 +54,9 @@ public class CompressedSuffixTrie {
      * findString - finding the first occurrence of a pattern s in the DNA sequence.
      * Returns -1 if unsuccessful, or index of first char of queryString in the sourceString.
      *
-     * Time Complexity: O(|s|) - where s is the number of characters in the query string
+     * Time Complexity: O(s) - where s is the number of characters in the query string
      * 
-     * Each char can be visited/assessed at most 1 time, (since it's popped each time). Since each visit takes O(1) time, therefore total time complexity is O(|s|)
+     * Each char can be visited/assessed at most 1 time, (since it's popped each time). Since each visit takes O(1) time, therefore total time complexity is O(s)
      *
      * @param queryString
      * @return
@@ -66,10 +66,10 @@ public class CompressedSuffixTrie {
         int childIndex; // O(1)
         SuffixTrieNode node = this.root; // O(1)
         LinkedList queryList = new LinkedList<>(); // O(1)
-        char[] queryArray = queryString.toCharArray(); // O(|s|)
+        char[] queryArray = queryString.toCharArray(); // O(s)
 
         // Firstly add all characters to a linked list queryList.
-        for (char c : queryArray) { // O(|s|)
+        for (char c : queryArray) { // O(s|)
             queryList.add(c); // O(1)
         }
         // Store the original size of queryList
@@ -79,7 +79,7 @@ public class CompressedSuffixTrie {
         try {
             while (!queryList.isEmpty()) {
                 // Map the first char in queryList to the childIndex
-                childIndex = mapCharToIndex((char) queryList.peekFirst());
+                childIndex = mapCharToIndex((char) queryList.peekFirst()); // O(1) - since number of characters in Alphabet is constant.
 
                 // If it's not a part of the alphabet found, throw exception.
                 if (childIndex == -1) {
@@ -135,7 +135,7 @@ public class CompressedSuffixTrie {
 
         String lcs = longestCommonSubsequence(f1Array, f2Array); // O(mn) - see below
 
-        if (!lcs.equals("")) stringToFile(f3,lcs); // O(|s|) - where s is the number of chars in lcs. It is <= m+n.
+        if (!lcs.equals("")) stringToFile(f3,lcs); // O(m+n) - in the case where f1 and f2 are identical.
         float num = (float) lcs.length(); // O(1)
         float den = (float) Math.max(f1Array.length, f2Array.length); // O(1)
 //        Prints for Testing
@@ -180,7 +180,7 @@ public class CompressedSuffixTrie {
 
         return store[f1.length][f2.length];
 
-//        This is an incorrect algorithm that determined the longest common SUBSTRING
+//        This is an alternative algorithm that determined the longest common SUBSTRING
 //        for (int i = 0; i < f1.length; i++) {
 //            for (int j = 0; j < f2.length; j++) {
 //                // If the chars at i and j don't save "" in store[i][j].
@@ -286,9 +286,9 @@ public class CompressedSuffixTrie {
         try {
             Scanner input = new Scanner(f);
             while (input.hasNext()) { // O(n) - where n is the number of characters in the file
-                next = input.next().toCharArray();  // O(|s|) - where s is the number of characters in each iteration
+                next = input.next().toCharArray();  // O(s) - where s is the number of characters in each iteration
                 // Filter each char to make sure they are inside the alphabet
-                for (char c: next) { // O(|s|) - where s is the number of characters in each iteration
+                for (char c: next) { // O(s) - where s is the number of characters in each iteration
                     if (mapCharToIndex(c) >= 0 && mapCharToIndex(c) < 4 ) inputString += Character.toString(c); // O(1)
                 }
             }
@@ -344,7 +344,7 @@ public class CompressedSuffixTrie {
 
         // As we loop through the inputString, we want to both the actual characters of the substring
         for (int i = 0; i < size; i++) { // O(n2) - number of char in the the source inputString
-            suffixStringArray[i] = inputString.substring(i,size); // O(|s|) - s is the number of characters in the suffix, since substring creates a
+            suffixStringArray[i] = inputString.substring(i,size); // O(s) - s is the number of characters in the suffix, since substring creates a
             suffixStartIndexArray[i] = i; // O(1)
         }
     }
@@ -368,25 +368,26 @@ public class CompressedSuffixTrie {
 
         // We go through each suffix, and in each suffix we iteratively add each character
         for (int i = 0; i< suffixStringArray.length; i++) { // O(n2) - since the total number of chars  (n * (n+1) / 2)
-            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]); // O(|s|) - s is the number of chars in the suffix
+            addSuffix(suffixStringArray[i], suffixStartIndexArray[i]); // O(s) - s is the number of chars in the suffix
         }
     }
 
     /**
      * addSuffix - adds a suffix to the CompressedSuffixTrie
      *
-     * Time Complexity: O(|s|) {where s is the number of characters in the suffix}
+     * Time Complexity: O(s) - where s is the number of characters in the suffix
+     * Note: in assignment it says O(|s|) where s is the suffix/string. Here it is the number of characters, i.e. |s|
      *
      * @param suffix
      * @param suffixStartIndex
      */
-    protected void addSuffix(String suffix, int suffixStartIndex) { // O(|s|) - s is the number of characters in suffix
-        char[] suffixArray = suffix.toCharArray(); // O(n)
+    protected void addSuffix(String suffix, int suffixStartIndex) { // O(s) - s is the number of characters in suffix
+        char[] suffixArray = suffix.toCharArray(); // O(s)
         SuffixTrieNode node = this.root; // O(1)
         int childIndex; // O(1)
 
         // Loop through all the characters in the suffix one at a time
-        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) { // O(|s|)
+        for (int stringIndex = 0; stringIndex < suffixArray.length; stringIndex ++) { // O(s)
             // Get the index of the char
             childIndex = mapCharToIndex(suffixArray[stringIndex]); // O(1)
 
@@ -453,7 +454,7 @@ public class CompressedSuffixTrie {
     /**
      * mapCharToIndex - map the char c to an index of a char in the Alphabet
      *
-     * Time Complexity: O(1)
+     * Time Complexity: O(1) (since the size of the Alphabet is constant)
      *
      * @param c
      * @return
@@ -480,7 +481,7 @@ public class CompressedSuffixTrie {
     /**
      * printLabels - performs level order traversal to view each node's label and compactLabel. It could be vastly improved.
      *
-     * Time Complexity: O(|s|) - where s is the number of nodes in a compressedSuffixTrie
+     * Time Complexity: O(s) - where s is the number of nodes in a compressedSuffixTrie
      */
     protected void printLabels() {
         // Do not print if empty
@@ -499,6 +500,7 @@ public class CompressedSuffixTrie {
             SuffixTrieNode node = store.dequeue(); // O(1)
 
             // Perform visit by printing
+//            Commented out to print the $ signs
 //            if (node.label!=null) {
 //                if (!node.label.equals("$")) System.out.println(node); // O(1)
 //            }
